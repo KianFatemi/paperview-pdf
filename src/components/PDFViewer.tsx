@@ -5,7 +5,6 @@ import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
-
 interface PDFViewerProps {
   pdfData: Uint8Array | null;
 }
@@ -20,36 +19,47 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData }) => {
       if (canvasContainerRef.current) {
         canvasContainerRef.current.innerHTML = '';
       }
-
+    
       try {
-        const loadingTask = pdfjsLib.getDocument(pdfData);
+        const loadingTask = pdfjsLib.getDocument(pdfData!);
         const pdf = await loadingTask.promise;
-
+    
         for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
           const page = await pdf.getPage(pageNum);
-          
-          const viewport = page.getViewport({ scale: 1.5 });
-
+    
+          const scale = 1.5;
+          const viewport = page.getViewport({ scale });
+    
           const canvas = document.createElement('canvas');
           const context = canvas.getContext('2d');
           if (!context) continue;
-
-          canvas.height = viewport.height;
-          canvas.width = viewport.width;
+    
+          const outputScale = window.devicePixelRatio || 1;
+    
+          canvas.width = Math.floor(viewport.width * outputScale);
+          canvas.height = Math.floor(viewport.height * outputScale);
+    
+          canvas.style.width = `${viewport.width}px`;
+          canvas.style.height = `${viewport.height}px`;
+    
           canvas.className = 'mb-4 shadow-lg';
-
           canvasContainerRef.current?.appendChild(canvas);
-
+    
           const renderContext = {
-            canvas: canvas,
-            viewport: viewport,
+            canvasContext: context,
+            viewport,
+            canvas,
+            transform:
+              outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : undefined,
           };
+          
           await page.render(renderContext).promise;
         }
       } catch (error) {
         console.error('Error rendering PDF:', error);
         if (canvasContainerRef.current) {
-          canvasContainerRef.current.innerHTML = '<p class="text-red-400 p-4">Failed to load PDF.</p>';
+          canvasContainerRef.current.innerHTML =
+            '<p class="text-red-400 p-4">Failed to load PDF.</p>';
         }
       }
     };
