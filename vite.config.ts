@@ -3,6 +3,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url';
 import electron from 'vite-plugin-electron/simple'
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -14,6 +15,7 @@ export default defineConfig({
   },
   plugins: [
     react(),
+    tailwindcss(),
     electron({
       main: {
         entry: 'electron/main.ts',
