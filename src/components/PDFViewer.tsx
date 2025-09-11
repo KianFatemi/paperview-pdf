@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 
@@ -8,9 +9,10 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 interface PDFViewerProps {
   pdfData: Uint8Array | null;
   activePage: number;
+  zoomLevel: number; 
 }
 
-const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage }) => {
+const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel }) => {
   const canvasContainerRef = useRef<HTMLDivElement>(null);
   const [pdfDocument, setPdfDocument] = useState<pdfjsLib.PDFDocumentProxy | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +27,6 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage }) => {
     const loadPdf = async () => {
       try {
         setError(null);
-        // Create a copy of the data to avoid sharing issues
         const pdfDataCopy = new Uint8Array(pdfData);
         const loadingTask = pdfjsLib.getDocument(pdfDataCopy);
         const pdf = await loadingTask.promise;
@@ -45,16 +46,22 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage }) => {
 
     const renderPdf = async () => {
       try {
-        // Clear existing content
-        if (canvasContainerRef.current) {
-          canvasContainerRef.current.innerHTML = '';
-        }
+        const container = canvasContainerRef.current;
+        if (!container) return;
+        container.innerHTML = '';
+
+        const containerWidth = container.offsetWidth - 32; 
 
         for (let pageNum = 1; pageNum <= pdfDocument.numPages; pageNum++) {
           const page = await pdfDocument.getPage(pageNum);
 
-          const scale = 1.5;
-          const viewport = page.getViewport({ scale });
+          
+          const viewport = page.getViewport({ scale: 1 });
+          const initialScale = containerWidth / viewport.width;
+
+          
+          const scale = initialScale * zoomLevel;
+          const scaledViewport = page.getViewport({ scale });
 
           const canvas = document.createElement('canvas');
           const context = canvas.getContext('2d');
@@ -62,22 +69,20 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage }) => {
 
           const outputScale = window.devicePixelRatio || 1;
 
-          canvas.width = Math.floor(viewport.width * outputScale);
-          canvas.height = Math.floor(viewport.height * outputScale);
+          canvas.width = Math.floor(scaledViewport.width * outputScale);
+          canvas.height = Math.floor(scaledViewport.height * outputScale);
 
-          canvas.style.width = `${viewport.width}px`;
-          canvas.style.height = `${viewport.height}px`;
+          canvas.style.width = `${scaledViewport.width}px`;
+          canvas.style.height = `${scaledViewport.height}px`;
 
           canvas.setAttribute('data-page-number', String(pageNum));
           canvas.className = 'mb-4 shadow-lg';
 
-          if (canvasContainerRef.current) {
-            canvasContainerRef.current.appendChild(canvas);
-          }
+          container.appendChild(canvas);
 
           const renderContext = {
             canvasContext: context,
-            viewport,
+            viewport: scaledViewport,
             canvas,
             transform:
               outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : undefined,
@@ -92,7 +97,8 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage }) => {
     };
 
     renderPdf();
-  }, [pdfDocument]);
+        
+  }, [pdfDocument, zoomLevel]); 
 
   useEffect(() => {
     if (!canvasContainerRef.current) return;
