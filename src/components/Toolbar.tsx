@@ -5,9 +5,10 @@ interface ToolbarProps {
   handleZoomIn: () => void; 
   handleZoomOut: () => void; 
   handleFitToScreen: () => void; 
+  onOpenSearch: () => void;
 }
 
-const Toolbar: React.FC<ToolbarProps> = ({ setPdfData, handleZoomIn, handleZoomOut, handleFitToScreen }) => {
+const Toolbar: React.FC<ToolbarProps> = ({ setPdfData, handleZoomIn, handleZoomOut, handleFitToScreen, onOpenSearch }) => {
   
   const handleOpenFile = async () => {
     try {
@@ -47,6 +48,12 @@ const Toolbar: React.FC<ToolbarProps> = ({ setPdfData, handleZoomIn, handleZoomO
           className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           Fit to Screen
+        </button>
+        <button
+          onClick={onOpenSearch}
+          className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          Search
         </button>
       </div>
     </div>
