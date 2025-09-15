@@ -8,6 +8,8 @@ interface PDFSearchOverlayProps {
 	pdfData: Uint8Array | null;
 	onClose: () => void;
 	setActivePage: (page: number) => void;
+	onSearch?: (query: string) => void;
+	onClear?: () => void;
 }
 
 interface SearchMatch {
@@ -17,7 +19,7 @@ interface SearchMatch {
 	context: string;
 }
 
-const PDFSearchOverlay: React.FC<PDFSearchOverlayProps> = ({ pdfData, onClose, setActivePage }) => {
+const PDFSearchOverlay: React.FC<PDFSearchOverlayProps> = ({ pdfData, onClose, setActivePage, onSearch, onClear }) => {
 	const [query, setQuery] = useState('');
 	const [isSearching, setIsSearching] = useState(false);
 	const [matches, setMatches] = useState<SearchMatch[]>([]);
@@ -33,6 +35,7 @@ const PDFSearchOverlay: React.FC<PDFSearchOverlayProps> = ({ pdfData, onClose, s
 		const q = query.trim();
 		if (!q) {
 			setMatches([]);
+			onClear?.();
 			return;
 		}
 		setIsSearching(true);
@@ -57,9 +60,11 @@ const PDFSearchOverlay: React.FC<PDFSearchOverlayProps> = ({ pdfData, onClose, s
 				}
 			}
 			setMatches(newMatches);
+			onSearch?.(q);
 		} catch (err) {
 			console.error('Search failed', err);
 			setMatches([]);
+			onClear?.();
 		} finally {
 			setIsSearching(false);
 		}
@@ -99,6 +104,13 @@ const PDFSearchOverlay: React.FC<PDFSearchOverlayProps> = ({ pdfData, onClose, s
 					className="px-3 py-1 bg-blue-600 disabled:bg-gray-600 rounded"
 				>
 					{isSearching ? 'Searching…' : 'Search'}
+				</button>
+				<button
+					onClick={() => { setMatches([]); setQuery(''); onClear?.(); }}
+					disabled={isSearching}
+					className="px-3 py-1 bg-gray-600 rounded"
+				>
+					Clear
 				</button>
 				<button onClick={onClose} className="px-2 py-1 bg-gray-600 rounded">×</button>
 			</div>

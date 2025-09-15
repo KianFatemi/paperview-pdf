@@ -33,6 +33,44 @@ body {
   overflow: hidden;
 }
 
+.textLayer {
+  position: absolute;
+  inset: 0;
+  color: transparent;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+.textLayer span {
+  position: absolute;
+  white-space: pre;
+  transform-origin: 0% 0%;
+}
+.textLayer .pdf-highlight {
+  background: rgba(255, 223, 93, 0.8);
+  color: transparent;
+  border-radius: 2px;
+  padding: 0;
+  margin: 0;
+}
+
+.textLayer .pdf-highlight-rect {
+  background: rgba(255, 223, 93, 0.35);
+  outline: 1px solid rgba(255, 223, 93, 0.8);
+  border-radius: 2px;
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
+.pdf-highlight-rect {
+  background: rgba(255, 223, 93, 0.35);
+  outline: 1px solid rgba(255, 223, 93, 0.8);
+  border-radius: 2px;
+  pointer-events: none;
+  box-sizing: border-box;
+  transition: none;
+  will-change: auto;
+}
+
 h1 {
   font-size: 3.2em;
   line-height: 1.1;

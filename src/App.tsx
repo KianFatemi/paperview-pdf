@@ -10,6 +10,7 @@ function App() {
   const [activePage, setActivePage] = useState<number>(1);
   const [zoomLevel, setZoomLevel] = useState<number>(1.0);
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   const handleZoomIn = () => setZoomLevel((prevZoom) => prevZoom + 0.1);
   const handleZoomOut = () => setZoomLevel((prevZoom) => Math.max(0.1, prevZoom - 0.1));
@@ -34,13 +35,16 @@ function App() {
           <PDFViewer 
             pdfData={pdfData} 
             activePage={activePage} 
-            zoomLevel={zoomLevel} 
+            zoomLevel={zoomLevel}
+            searchQuery={searchQuery}
           />
           {isSearchOpen && (
             <PDFSearchOverlay
               pdfData={pdfData}
               onClose={() => setIsSearchOpen(false)}
               setActivePage={setActivePage}
+              onSearch={(q) => setSearchQuery(q)}
+              onClear={() => setSearchQuery('')}
             />
           )}
         </div>
