@@ -30,6 +30,7 @@ function App() {
           handleZoomOut={handleZoomOut}
           handleFitToScreen={handleFitToScreen}
           onOpenSearch={() => setIsSearchOpen(true)}
+          zoomLevel={zoomLevel}
         />
         <div className="relative flex-1 flex min-h-0">
           <PDFViewer 

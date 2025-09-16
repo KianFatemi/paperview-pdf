@@ -6,9 +6,10 @@ interface ToolbarProps {
   handleZoomOut: () => void; 
   handleFitToScreen: () => void; 
   onOpenSearch: () => void;
+  zoomLevel: number;
 }
 
-const Toolbar: React.FC<ToolbarProps> = ({ setPdfData, handleZoomIn, handleZoomOut, handleFitToScreen, onOpenSearch }) => {
+const Toolbar: React.FC<ToolbarProps> = ({ setPdfData, handleZoomIn, handleZoomOut, handleFitToScreen, onOpenSearch, zoomLevel }) => {
   
   const handleOpenFile = async () => {
     try {
@@ -32,16 +33,19 @@ const Toolbar: React.FC<ToolbarProps> = ({ setPdfData, handleZoomIn, handleZoomO
       </button>
       <div className="flex items-center space-x-2">
         <button
-          onClick={handleZoomIn}
-          className="p-2 bg-gray-600 text-white rounded-md hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          +
-        </button>
-        <button
           onClick={handleZoomOut}
           className="p-2 bg-gray-600 text-white rounded-md hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           -
+        </button>
+        <div className="px-3 py-2 bg-gray-800 text-white rounded-md border border-gray-600 min-w-[70px] text-center text-sm font-mono">
+          {Math.round(zoomLevel * 100)}%
+        </div>
+        <button
+          onClick={handleZoomIn}
+          className="p-2 bg-gray-600 text-white rounded-md hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          +
         </button>
         <button
           onClick={handleFitToScreen}
