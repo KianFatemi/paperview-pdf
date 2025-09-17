@@ -26,6 +26,20 @@ const PDFSearchOverlay: React.FC<PDFSearchOverlayProps> = ({ pdfData, onClose, s
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const isDisabled = useMemo(() => !pdfData || query.trim().length === 0, [pdfData, query]);
 
+	// Handle keyboard shortcuts
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.key === 'Escape') {
+				onClose();
+			}
+		};
+
+		document.addEventListener('keydown', handleKeyDown);
+		return () => {
+			document.removeEventListener('keydown', handleKeyDown);
+		};
+	}, [onClose]);
+
 	useEffect(() => {
 		setCurrentIndex(0);
 	}, [matches.length]);
@@ -89,31 +103,49 @@ const PDFSearchOverlay: React.FC<PDFSearchOverlayProps> = ({ pdfData, onClose, s
 	};
 
 	return (
-		<div className="absolute top-2 right-2 z-50 bg-gray-700 text-white rounded-md shadow-lg w-96 max-w-[95vw]">
-			<div className="p-3 border-b border-gray-600 flex items-center gap-2">
-				<input
-					type="text"
-					value={query}
-					onChange={(e) => setQuery(e.target.value)}
-					placeholder="Find in document"
-					className="flex-1 px-2 py-1 rounded bg-gray-800 border border-gray-600 focus:outline-none"
-				/>
-				<button
-					onClick={performSearch}
-					disabled={isDisabled || isSearching}
-					className="px-3 py-1 bg-blue-600 disabled:bg-gray-600 rounded"
-				>
-					{isSearching ? 'Searching…' : 'Search'}
-				</button>
-				<button
-					onClick={() => { setMatches([]); setQuery(''); onClear?.(); }}
-					disabled={isSearching}
-					className="px-3 py-1 bg-gray-600 rounded"
-				>
-					Clear
-				</button>
-				<button onClick={onClose} className="px-2 py-1 bg-gray-600 rounded">×</button>
-			</div>
+		<div className="absolute top-2 right-2 z-50 bg-gray-700 text-white rounded-md shadow-lg w-[420px] max-w-[95vw]">
+		<div className="p-3 border-b border-gray-600 flex items-center gap-1">
+			<input
+				type="text"
+				value={query}
+				onChange={(e) => setQuery(e.target.value)}
+				placeholder="Find in document"
+				className="flex-1 px-2 py-1 rounded bg-gray-800 border border-gray-600 focus:outline-none text-sm"
+			/>
+			<button
+				onClick={performSearch}
+				disabled={isDisabled || isSearching}
+				className="px-2 py-1 bg-blue-600 disabled:bg-gray-600 rounded text-xs whitespace-nowrap"
+			>
+				{isSearching ? 'Searching…' : 'Search'}
+			</button>
+			<button
+				onClick={() => { setMatches([]); setQuery(''); onClear?.(); }}
+				disabled={isSearching}
+				className="px-2 py-1 bg-gray-600 rounded text-xs"
+			>
+				Clear
+			</button>
+			<button 
+				onClick={onClose} 
+				className="ml-1 rounded text-white font-bold border-0 transition-colors flex-shrink-0"
+				title="Close search"
+				style={{ 
+					backgroundColor: '#dc2626', 
+					border: 'none',
+					fontSize: '14px',
+					width: '28px',
+					height: '28px',
+					display: 'flex',
+					alignItems: 'center',
+					justifyContent: 'center'
+				}}
+				onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#b91c1c'}
+				onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
+			>
+				✕
+			</button>
+		</div>
 			<div className="p-3 flex items-center gap-2 text-sm border-b border-gray-600">
 				<span>{matches.length} match{matches.length === 1 ? '' : 'es'}</span>
 				<div className="ml-auto flex items-center gap-2">
