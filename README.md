@@ -1,69 +1,104 @@
-# React + TypeScript + Vite
+# PaperView 📄
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A cross platform PDF viewer built with Electron, React, and TypeScript. PaperView provides a clean interface for viewing and searching through PDF documents.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **PDF Viewing**: High quality PDF rendering with smooth scrolling
+- **Full-Text Search**: Search through PDF content with highlighted results and context preview
+- **Thumbnail Navigation**: Quick page navigation with thumbnail sidebar
+- **Zoom Controls**: Zoom in and zoom out with fit to screen
+- **Modern UI**: Clean, dark-themed interface built with Tailwind CSS
+- **Cross-Platform**: Works on Windows, macOS, and Linux
 
-## Expanding the ESLint configuration
+## Tech Stack
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **Frontend**: React 19 + TypeScript
+- **Desktop**: Electron 38
+- **PDF Engine**: PDF.js 5.4
+- **Styling**: Tailwind CSS 4.1
+- **Build Tool**: Vite 7
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Getting Started
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+### Prerequisites
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- Node.js 18+ 
+- npm or yarn
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/your-username/paperview.git
+   cd paperview
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Start development server**
+   ```bash
+   npm run dev
+   ```
+
+4. **Build for production**
+   ```bash
+   npm run build
+   ```
+
+5. **Build Electron app**
+   ```bash
+   npm run electron:build
+   ```
+
+## Project Structure
+
+```
+paperview/
+├── electron/              # Electron main process files
+│   ├── main.ts            # Main Electron process
+│   └── preload.ts         # Preload script
+├── src/
+│   ├── components/        # React components
+│   │   ├── PDFViewer.tsx      # Main PDF display component
+│   │   ├── PDFSearchOverlay.tsx # Search functionality
+│   │   ├── Sidebar.tsx        # Thumbnail navigation
+│   │   ├── Toolbar.tsx        # Top toolbar with controls
+│   │   └── ThumbnailView.tsx  # Page thumbnails
+│   ├── App.tsx            # Main application component
+│   ├── main.tsx           # React entry point
+│   └── types.ts           # TypeScript type definitions
+├── dist-electron/         # Built Electron files
+└── public/               # Static assets
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🎮 Usage
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Opening PDFs
+- Click the "Open PDF" button in the toolbar
+- Or drag and drop a PDF file into the application
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### Navigation
+- **Sidebar Thumbnails**: Click any thumbnail to jump to that page
+- **Zoom Controls**: Use +/- buttons or fit-to-screen in the toolbar
+- **Keyboard Shortcuts**: 
+  - `Ctrl/Cmd + F`: Open search overlay
+  - `Escape`: Close search overlay
+
+### Search Features
+- **Full Text Search**: Enter text in the search box to find all occurrences
+- **Navigation**: Use Previous/Next buttons to jump between search results
+- **Context Preview**: See surrounding text for each match
+- **Page Jump**: Click any search result to navigate directly to that page
+
+
+## Roadmap
+
+- [ ] Annotation support
+- [ ] Bookmarks functionality  
+- [ ] Print support
+- [ ] Recent files list
+- [ ] PDF edits
