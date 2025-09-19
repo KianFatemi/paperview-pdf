@@ -3,6 +3,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+import { useCopyText } from '../hooks/useCopyText';
+import PDFContextMenu from './PDFContextMenu';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
@@ -271,6 +273,8 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
     return () => clearTimeout(timeout);
   }, [searchQuery]);
 
+  const { menuPosition, setMenuPosition, handleCopy } = useCopyText(canvasContainerRef);
+
   return (
     <div ref={canvasContainerRef} className="flex-1 overflow-auto p-4 bg-gray-800 flex flex-col items-center">
       {!pdfData && (
@@ -282,6 +286,14 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
         <div className="text-red-400 p-4">
           <p>{error}</p>
         </div>
+      )}
+      {menuPosition && (
+        <PDFContextMenu
+          x={menuPosition.x}
+          y={menuPosition.y}
+          onClose={() => setMenuPosition(null)}
+          onCopy={handleCopy}
+        />
       )}
     </div>
   );
