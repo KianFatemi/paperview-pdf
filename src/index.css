@@ -33,34 +33,67 @@ body {
   overflow: hidden;
 }
 
-.textLayer {
+.pdf-layer__text {
   position: absolute;
   inset: 0;
   color: transparent;
   mix-blend-mode: multiply;
-  pointer-events: none;
+  pointer-events: auto;
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+}
+.pdf-layer__text span {
+  position: absolute;
+  white-space: pre;
+  transform-origin: 0% 0%;
+  cursor: text;
+  color: transparent !important;
+}
+
+.textLayer {
+  position: absolute;
+  inset: 0;
+  color: transparent !important;
+  mix-blend-mode: multiply;
+  pointer-events: auto;
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
 }
 .textLayer span {
   position: absolute;
   white-space: pre;
   transform-origin: 0% 0%;
+  cursor: text;
+  color: transparent !important;
 }
-.textLayer .pdf-highlight {
+.pdf-layer__text ::selection,
+.textLayer ::selection {
+  background: rgba(0, 123, 255, 0.3) !important;
+  color: transparent !important;
+}
+.pdf-layer__text ::-moz-selection,
+.textLayer ::-moz-selection {
+  background: rgba(0, 123, 255, 0.3) !important;
+  color: transparent !important;
+}
+.pdf-layer__text .pdf-highlight {
   background: rgba(255, 223, 93, 0.8);
   color: transparent;
   border-radius: 2px;
   padding: 0;
   margin: 0;
 }
-
-.textLayer .pdf-highlight-rect {
+.pdf-layer__text .pdf-highlight-rect {
   background: rgba(255, 223, 93, 0.35);
   outline: 1px solid rgba(255, 223, 93, 0.8);
   border-radius: 2px;
   pointer-events: none;
   box-sizing: border-box;
 }
-
 .pdf-highlight-rect {
   background: rgba(255, 223, 93, 0.35);
   outline: 1px solid rgba(255, 223, 93, 0.8);

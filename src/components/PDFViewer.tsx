@@ -147,17 +147,24 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
 
           
           const scale = initialScale * zoomLevel;
+          const outputScale = window.devicePixelRatio || 1;
           const scaledViewport = page.getViewport({ scale });
 
           const pageWrapper = document.createElement('div');
           pageWrapper.className = 'relative mb-4 shadow-lg';
           pageWrapper.setAttribute('data-page-number', String(pageNum));
 
+          const layersDiv = document.createElement('div');
+          layersDiv.className = 'pdf-layers';
+          layersDiv.style.position = 'relative';
+          layersDiv.style.width = `${scaledViewport.width}px`;
+          layersDiv.style.height = `${scaledViewport.height}px`;
+
+          const canvasDiv = document.createElement('div');
+          canvasDiv.className = 'pdf-layer__canvas';
           const canvas = document.createElement('canvas');
           const context = canvas.getContext('2d');
           if (!context) continue;
-
-          const outputScale = window.devicePixelRatio || 1;
 
           canvas.width = Math.floor(scaledViewport.width * outputScale);
           canvas.height = Math.floor(scaledViewport.height * outputScale);
@@ -165,7 +172,20 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
           canvas.style.width = `${scaledViewport.width}px`;
           canvas.style.height = `${scaledViewport.height}px`;
 
-          pageWrapper.appendChild(canvas);
+          canvasDiv.appendChild(canvas);
+
+          const textLayerDiv = document.createElement('div');
+          textLayerDiv.className = 'pdf-layer__text';
+          textLayerDiv.style.position = 'absolute';
+          textLayerDiv.style.left = '0px';
+          textLayerDiv.style.top = '0px';
+          textLayerDiv.style.width = `${scaledViewport.width}px`;
+          textLayerDiv.style.height = `${scaledViewport.height}px`;
+          textLayerDiv.style.setProperty('--total-scale-factor', `${scale}`);
+
+          layersDiv.appendChild(canvasDiv);
+          layersDiv.appendChild(textLayerDiv);
+          pageWrapper.appendChild(layersDiv);
           container.appendChild(pageWrapper);
 
           const renderContext = {
@@ -179,21 +199,10 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
           await page.render(renderContext).promise;
 
           const textContent = await page.getTextContent();
-          const textLayerDiv = document.createElement('div');
-          textLayerDiv.className = 'textLayer';
-          Object.assign(textLayerDiv.style, {
-            position: 'absolute',
-            left: '0px',
-            top: '0px',
-            width: `${scaledViewport.width}px`,
-            height: `${scaledViewport.height}px`,
-          });
-          pageWrapper.appendChild(textLayerDiv);
-
           const textLayer = new (pdfjsLib as any).TextLayer({
             textContentSource: textContent,
             container: textLayerDiv,
-            viewport: scaledViewport,
+            viewport: scaledViewport.clone({ dontFlip: true }),
           });
           await textLayer.render();
 
@@ -247,7 +256,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
   useEffect(() => {
     const container = canvasContainerRef.current;
     if (!container) return;
-    const layers = Array.from(container.querySelectorAll('.textLayer')) as HTMLElement[];
+    const layers = Array.from(container.querySelectorAll('.pdf-layer__text, .textLayer')) as HTMLElement[];
     
     const timeout = setTimeout(() => {
       layers.forEach((layer) => {
