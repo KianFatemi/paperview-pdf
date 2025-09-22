@@ -1,13 +1,37 @@
 import React from 'react';
+import AnnotationToolbar from './AnnotationToolbar';
+import type { AnnotationType } from '../types';
 
 interface Props {
   x: number;
   y: number;
   onClose: () => void;
   onCopy: () => void;
+  onApplyAnnotation: (type: AnnotationType) => void; 
 }
 
-const PDFContextMenu: React.FC<Props> = ({ x, y, onClose, onCopy }) => {
+const PDFContextMenu: React.FC<Props> = ({ x, y, onClose, onCopy, onApplyAnnotation }) => {
+  const selectionRef = React.useRef<Selection | null>(null);
+  const rangeRef = React.useRef<Range | null>(null);
+
+  React.useEffect(() => {
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+      selectionRef.current = selection;
+      rangeRef.current = selection.getRangeAt(0).cloneRange();
+    }
+  }, []);
+
+  const handleApply = (type: AnnotationType) => {
+    
+    if (selectionRef.current && rangeRef.current) {
+      selectionRef.current.removeAllRanges();
+      selectionRef.current.addRange(rangeRef.current);
+    }
+    onApplyAnnotation(type);
+    onClose();
+  };
+
   return (
     <div
       className="fixed bg-white border border-gray-200 rounded-lg shadow-xl z-50 min-w-[120px] overflow-hidden backdrop-blur-sm"
@@ -41,6 +65,8 @@ const PDFContextMenu: React.FC<Props> = ({ x, y, onClose, onCopy }) => {
           </svg>
           Copy
         </li>
+        
+        <AnnotationToolbar onApply={handleApply} />
       </ul>
     </div>
   );

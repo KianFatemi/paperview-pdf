@@ -5,6 +5,11 @@ import * as pdfjsLib from 'pdfjs-dist';
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { useCopyText } from '../hooks/useCopyText';
 import PDFContextMenu from './PDFContextMenu';
+import AnnotationLayer from './AnnotationLayer'; // New import
+import { v4 as uuidv4 } from 'uuid';
+import { createRoot } from 'react-dom/client';
+import type { Root } from 'react-dom/client'; // Type-only import
+import type { Annotation as AnnotationInterface, AnnotationType, Rect } from '../types'; // Type-only imports
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
@@ -20,6 +25,8 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
   const [pdfDocument, setPdfDocument] = useState<pdfjsLib.PDFDocumentProxy | null>(null);
   const [error, setError] = useState<string | null>(null);
   const queryRef = useRef<string>(searchQuery);
+  const [annotations, setAnnotations] = useState<AnnotationInterface[]>([]); // New state for annotations
+  const [pageScales, setPageScales] = useState<{ [key: number]: number }>({}); // New state for per-page scales
 
   useEffect(() => {
     queryRef.current = searchQuery;
@@ -99,12 +106,14 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
     if (!pdfData) {
       setPdfDocument(null);
       setError(null);
+      setAnnotations([]); 
       return;
     }
 
     const loadPdf = async () => {
       try {
         setError(null);
+        setAnnotations([]); 
         const pdfDataCopy = new Uint8Array(pdfData);
         const loadingTask = pdfjsLib.getDocument(pdfDataCopy);
         const pdf = await loadingTask.promise;
@@ -124,12 +133,15 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
 
     let observers: ResizeObserver[] = [];
     let highlightTimeouts: NodeJS.Timeout[] = [];
+    let reactRoots: Root[] = []; 
 
     const cleanup = () => {
       observers.forEach(observer => observer.disconnect());
       highlightTimeouts.forEach(timeout => clearTimeout(timeout));
+      reactRoots.forEach(root => setTimeout(() => root.unmount(), 0));
       observers = [];
       highlightTimeouts = [];
+      reactRoots = [];
     };
 
     const renderPdf = async () => {
@@ -185,8 +197,21 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
           textLayerDiv.style.height = `${scaledViewport.height}px`;
           textLayerDiv.style.setProperty('--total-scale-factor', `${scale}`);
 
+          setPageScales((prev) => ({ ...prev, [pageNum]: scale }));
+
+          
+          const annotationLayerDiv = document.createElement('div');
+          annotationLayerDiv.className = 'pdf-layer__annotation';
+          annotationLayerDiv.style.position = 'absolute';
+          annotationLayerDiv.style.left = '0px';
+          annotationLayerDiv.style.top = '0px';
+          annotationLayerDiv.style.width = `${scaledViewport.width}px`;
+          annotationLayerDiv.style.height = `${scaledViewport.height}px`;
+
           layersDiv.appendChild(canvasDiv);
           layersDiv.appendChild(textLayerDiv);
+          layersDiv.appendChild(annotationLayerDiv); 
+
           pageWrapper.appendChild(layersDiv);
           container.appendChild(pageWrapper);
 
@@ -229,6 +254,12 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
           });
           ro.observe(textLayerDiv);
           observers.push(ro);
+
+          
+          const pageAnnotations = annotations.filter((a) => a.page === pageNum);
+          const root = createRoot(annotationLayerDiv);
+          root.render(<AnnotationLayer annotations={pageAnnotations} scale={scale} />);
+          reactRoots.push(root); 
         }
       } catch (error) {
         console.error('Error rendering PDF:', error);
@@ -240,7 +271,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
     
     return cleanup;
         
-  }, [pdfDocument, zoomLevel]); 
+  }, [pdfDocument, zoomLevel, annotations]); // Add annotations to deps for re-render on change
 
   useEffect(() => {
     if (!canvasContainerRef.current) return;
@@ -275,6 +306,67 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
 
   const { menuPosition, setMenuPosition, handleCopy } = useCopyText(canvasContainerRef);
 
+  
+  const addAnnotation = (type: AnnotationType) => {
+    let color: string;
+    if (type === 'highlight') {
+      color = 'rgba(255, 255, 0, 0.5)';
+    } else {
+      color = 'red';
+    }
+
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) {
+      return;
+    }
+
+    const range = selection.getRangeAt(0);
+    const clientRects = Array.from(range.getClientRects());
+
+    
+    let node = range.startContainer as Node;
+    while (node && !((node as HTMLElement).classList?.contains('pdf-layer__text'))) {
+      node = node.parentNode as Node;
+    }
+    const textLayer = node as HTMLElement;
+    if (!textLayer) {
+      return;
+    }
+
+    const pageWrapper = textLayer.closest('[data-page-number]') as HTMLElement;
+    const pageNum = parseInt(pageWrapper.getAttribute('data-page-number') || '0');
+    if (!pageNum || !pageScales[pageNum]) {
+      return;
+    }
+
+    const scale = pageScales[pageNum];
+    const textLayerRect = textLayer.getBoundingClientRect();
+
+    const rects: Rect[] = clientRects
+      .filter(r => r.width > 0 && r.height > 0) // Filter out empty rects
+      .map((r) => ({
+        x: (r.left - textLayerRect.left) / scale,
+        y: (r.top - textLayerRect.top) / scale,
+        width: r.width / scale,
+        height: r.height / scale,
+      }));
+
+    if (rects.length === 0) {
+      return;
+    }
+
+    const newAnnotation: AnnotationInterface = {
+      id: uuidv4(),
+      page: pageNum,
+      type,
+      rects,
+      color,
+    };
+
+    setAnnotations((prev) => [...prev, newAnnotation]);
+    selection.removeAllRanges(); 
+  };
+
   return (
     <div ref={canvasContainerRef} className="flex-1 overflow-auto p-4 bg-gray-800 flex flex-col items-center">
       {!pdfData && (
@@ -293,6 +385,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
           y={menuPosition.y}
           onClose={() => setMenuPosition(null)}
           onCopy={handleCopy}
+          onApplyAnnotation={addAnnotation} // New prop
         />
       )}
     </div>
