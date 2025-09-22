@@ -9,7 +9,7 @@ import AnnotationLayer from './AnnotationLayer'; // New import
 import { v4 as uuidv4 } from 'uuid';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client'; // Type-only import
-import type { Annotation as AnnotationInterface, AnnotationType, Rect } from '../types'; // Type-only imports
+import type { Annotation as AnnotationInterface, AnnotationType, Rect, HighlightColor } from '../types'; // Type-only imports
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
@@ -27,6 +27,10 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
   const queryRef = useRef<string>(searchQuery);
   const [annotations, setAnnotations] = useState<AnnotationInterface[]>([]); // New state for annotations
   const [pageScales, setPageScales] = useState<{ [key: number]: number }>({}); // New state for per-page scales
+  const [selectedHighlightColor, setSelectedHighlightColor] = useState<HighlightColor>({
+    name: 'Yellow',
+    value: 'rgba(255, 255, 0, 0.5)'
+  }); 
 
   useEffect(() => {
     queryRef.current = searchQuery;
@@ -310,7 +314,8 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
   const addAnnotation = (type: AnnotationType) => {
     let color: string;
     if (type === 'highlight') {
-      color = 'rgba(255, 255, 0, 0.5)';
+      color = selectedHighlightColor.value;
+      console.log('Using highlight color:', color, 'from selectedHighlightColor:', selectedHighlightColor);
     } else {
       color = 'red';
     }
@@ -385,7 +390,9 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
           y={menuPosition.y}
           onClose={() => setMenuPosition(null)}
           onCopy={handleCopy}
-          onApplyAnnotation={addAnnotation} // New prop
+          onApplyAnnotation={addAnnotation}
+          selectedHighlightColor={selectedHighlightColor}
+          onColorChange={setSelectedHighlightColor}
         />
       )}
     </div>

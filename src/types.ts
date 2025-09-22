@@ -5,6 +5,11 @@ export interface PageTextMatch {
 
 export type AnnotationType = 'highlight' | 'underline' | 'strikethrough';
 
+export interface HighlightColor {
+  name: string;
+  value: string;
+}
+
 export interface Rect {
   x: number;
   y: number;

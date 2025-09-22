@@ -11,6 +11,7 @@ interface AnnotationProps {
 const THICKNESS = 0.3;  
 
 const Annotation: React.FC<AnnotationProps> = ({ type, rect, scale, color }) => {
+  console.log('Annotation component received color:', color, 'for type:', type);
   const scaledThickness = THICKNESS * scale;
   let style: React.CSSProperties = {
     position: 'absolute',
@@ -21,7 +22,18 @@ const Annotation: React.FC<AnnotationProps> = ({ type, rect, scale, color }) => 
   };
 
   if (type === 'highlight') {
-    style = { ...style, backgroundColor: color };
+    // Create a darker border color from the background color
+    const borderColor = color.replace(/rgba?\(([^)]+)\)/, (_, values) => {
+      const [r, g, b, a = 1] = values.split(',').map((v: string) => parseFloat(v.trim()));
+      // Make border color more opaque and slightly darker
+      return `rgba(${Math.max(0, r - 20)}, ${Math.max(0, g - 20)}, ${Math.max(0, b - 20)}, ${Math.min(1, (a as number) + 0.3)})`;
+    });
+    
+    style = { 
+      ...style, 
+      backgroundColor: color,
+      borderColor: borderColor
+    };
   } else if (type === 'underline') {
     style = {
       ...style,

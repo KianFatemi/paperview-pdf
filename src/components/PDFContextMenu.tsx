@@ -1,16 +1,18 @@
 import React from 'react';
 import AnnotationToolbar from './AnnotationToolbar';
-import type { AnnotationType } from '../types';
+import type { AnnotationType, HighlightColor } from '../types';
 
 interface Props {
   x: number;
   y: number;
   onClose: () => void;
   onCopy: () => void;
-  onApplyAnnotation: (type: AnnotationType) => void; 
+  onApplyAnnotation: (type: AnnotationType) => void;
+  selectedHighlightColor: HighlightColor;
+  onColorChange: (color: HighlightColor) => void;
 }
 
-const PDFContextMenu: React.FC<Props> = ({ x, y, onClose, onCopy, onApplyAnnotation }) => {
+const PDFContextMenu: React.FC<Props> = ({ x, y, onClose, onCopy, onApplyAnnotation, selectedHighlightColor, onColorChange }) => {
   const selectionRef = React.useRef<Selection | null>(null);
   const rangeRef = React.useRef<Range | null>(null);
 
@@ -66,7 +68,11 @@ const PDFContextMenu: React.FC<Props> = ({ x, y, onClose, onCopy, onApplyAnnotat
           Copy
         </li>
         
-        <AnnotationToolbar onApply={handleApply} />
+        <AnnotationToolbar 
+          onApply={handleApply} 
+          selectedHighlightColor={selectedHighlightColor}
+          onColorChange={onColorChange}
+        />
       </ul>
     </div>
   );
