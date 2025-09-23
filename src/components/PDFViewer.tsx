@@ -18,9 +18,11 @@ interface PDFViewerProps {
   activePage: number;
   zoomLevel: number;
   searchQuery?: string;
+  stickyNoteMode: boolean;
+  onToggleStickyNoteMode: () => void;
 }
 
-const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, searchQuery = '' }) => {
+const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, searchQuery = '', stickyNoteMode, onToggleStickyNoteMode }) => {
   const canvasContainerRef = useRef<HTMLDivElement>(null);
   const [pdfDocument, setPdfDocument] = useState<pdfjsLib.PDFDocumentProxy | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -31,8 +33,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
     name: 'Yellow',
     value: 'rgba(255, 255, 0, 0.5)'
   });
-  const [stickyNotes, setStickyNotes] = useState<StickyNote[]>([]);
-  const [stickyNoteMode, setStickyNoteMode] = useState(false); 
+  const [stickyNotes, setStickyNotes] = useState<StickyNote[]>([]); 
 
   useEffect(() => {
     queryRef.current = searchQuery;
@@ -410,7 +411,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
     };
 
     setStickyNotes((prev) => [...prev, newNote]);
-    setStickyNoteMode(false);
+    onToggleStickyNoteMode(); // Exit sticky note mode after placing
   };
 
   const updateStickyNote = (noteId: string, updates: Partial<StickyNote>) => {
@@ -445,8 +446,6 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
           onApplyAnnotation={addAnnotation}
           selectedHighlightColor={selectedHighlightColor}
           onColorChange={setSelectedHighlightColor}
-          stickyNoteMode={stickyNoteMode}
-          onToggleStickyNoteMode={() => setStickyNoteMode(!stickyNoteMode)}
         />
       )}
     </div>

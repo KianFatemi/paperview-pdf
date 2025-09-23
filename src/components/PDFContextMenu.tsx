@@ -10,11 +10,9 @@ interface Props {
   onApplyAnnotation: (type: AnnotationType) => void;
   selectedHighlightColor: HighlightColor;
   onColorChange: (color: HighlightColor) => void;
-  stickyNoteMode: boolean;
-  onToggleStickyNoteMode: () => void;
 }
 
-const PDFContextMenu: React.FC<Props> = ({ x, y, onClose, onCopy, onApplyAnnotation, selectedHighlightColor, onColorChange, stickyNoteMode, onToggleStickyNoteMode }) => {
+const PDFContextMenu: React.FC<Props> = ({ x, y, onClose, onCopy, onApplyAnnotation, selectedHighlightColor, onColorChange }) => {
   const selectionRef = React.useRef<Selection | null>(null);
   const rangeRef = React.useRef<Range | null>(null);
 
@@ -68,34 +66,6 @@ const PDFContextMenu: React.FC<Props> = ({ x, y, onClose, onCopy, onApplyAnnotat
             />
           </svg>
           Copy
-        </li>
-        
-        {/* Sticky Note Mode Toggle */}
-        <li
-          className={`flex items-center px-3 py-2 text-sm cursor-pointer rounded-md transition-colors duration-150 ease-in-out ${
-            stickyNoteMode 
-              ? 'bg-blue-100 text-blue-700 border border-blue-300' 
-              : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
-          }`}
-          onClick={() => {
-            onToggleStickyNoteMode();
-            onClose();
-          }}
-        >
-          <svg 
-            className="w-4 h-4 mr-2" 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-          >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" 
-            />
-          </svg>
-          {stickyNoteMode ? 'Exit Sticky Note Mode' : 'Add Sticky Note'}
         </li>
         
         <AnnotationToolbar 

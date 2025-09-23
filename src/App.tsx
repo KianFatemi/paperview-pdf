@@ -11,6 +11,7 @@ function App() {
   const [zoomLevel, setZoomLevel] = useState<number>(1.0);
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [stickyNoteMode, setStickyNoteMode] = useState<boolean>(false);
 
   const handleZoomIn = () => setZoomLevel((prevZoom) => prevZoom + 0.1);
   const handleZoomOut = () => setZoomLevel((prevZoom) => Math.max(0.1, prevZoom - 0.1));
@@ -31,6 +32,8 @@ function App() {
           handleFitToScreen={handleFitToScreen}
           onOpenSearch={() => setIsSearchOpen(true)}
           zoomLevel={zoomLevel}
+          stickyNoteMode={stickyNoteMode}
+          onToggleStickyNoteMode={() => setStickyNoteMode(!stickyNoteMode)}
         />
         <div className="relative flex-1 flex min-h-0">
           <PDFViewer 
@@ -38,6 +41,8 @@ function App() {
             activePage={activePage} 
             zoomLevel={zoomLevel}
             searchQuery={searchQuery}
+            stickyNoteMode={stickyNoteMode}
+            onToggleStickyNoteMode={() => setStickyNoteMode(!stickyNoteMode)}
           />
           {isSearchOpen && (
             <PDFSearchOverlay
