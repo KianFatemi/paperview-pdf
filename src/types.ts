@@ -3,11 +3,21 @@ export interface PageTextMatch {
   matchIndex: number;
 }
 
-export type AnnotationType = 'highlight' | 'underline' | 'strikethrough';
+export type AnnotationType = 'highlight' | 'underline' | 'strikethrough' | 'sticky-note';
 
 export interface HighlightColor {
   name: string;
   value: string;
+}
+
+export interface StickyNote {
+  id: string;
+  page: number;
+  x: number; 
+  y: number; 
+  text: string;
+  isExpanded: boolean;
+  timestamp: number;
 }
 
 export interface Rect {

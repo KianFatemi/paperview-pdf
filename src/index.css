@@ -114,6 +114,10 @@ body {
   z-index: 10; 
 }
 
+.pdf-layer__annotation .sticky-note {
+  pointer-events: auto;
+}
+
 .annotation-highlight {
   border-width: 1px;
   border-style: solid;
@@ -125,6 +129,199 @@ body {
 
 .annotation-strikethrough {
   background-color: red !important; 
+}
+
+/* Sticky Note Styles */
+.sticky-note {
+  position: absolute;
+  user-select: none;
+  pointer-events: auto; 
+}
+
+.sticky-note-icon {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  pointer-events: auto;
+}
+
+.sticky-note-icon:hover {
+  transform: scale(1.1);
+}
+
+.sticky-note-popup {
+  position: absolute;
+  top: 30px;
+  left: -100px;
+  width: 250px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 30;
+  max-height: 300px;
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+.sticky-note-editor textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 12px;
+  border: none;
+  border-radius: 8px 8px 0 0;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.4;
+  outline: none;
+  color: #333; 
+  background: white; 
+}
+
+.sticky-note-buttons {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+}
+
+.sticky-note-buttons button {
+  padding: 4px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: #f8f9fa; 
+  color: #333; 
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s ease;
+}
+
+.save-btn:hover {
+  background: #28a745;
+  color: white;
+  border-color: #28a745;
+}
+
+.cancel-btn:hover {
+  background: #6c757d;
+  color: white;
+  border-color: #6c757d;
+}
+
+.sticky-note-content {
+  padding: 12px;
+}
+
+.sticky-note-text {
+  font-size: 14px;
+  line-height: 1.4;
+  margin-bottom: 8px;
+  min-height: 20px;
+  word-wrap: break-word;
+  color: #333; 
+}
+
+.sticky-note-text em {
+  color: #6c757d; 
+}
+
+.sticky-note-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.sticky-note-actions button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: background-color 0.2s ease;
+}
+
+.edit-btn:hover {
+  background: #e3f2fd;
+}
+
+.delete-btn:hover {
+  background: #ffebee;
+}
+
+/* Sticky Note List Styles */
+.sticky-note-list {
+  padding: 16px;
+}
+
+.sticky-note-list-empty {
+  text-align: center;
+  padding: 20px;
+}
+
+.sticky-note-list-items {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.sticky-note-list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.sticky-note-list-item:hover {
+  background: #f8f9fa;
+  border-color: #dee2e6;
+}
+
+.sticky-note-list-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.sticky-note-list-text {
+  font-size: 14px;
+  line-height: 1.4;
+  margin-bottom: 4px;
+  word-wrap: break-word;
+}
+
+.sticky-note-list-meta {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+  color: #6c757d;
+}
+
+.sticky-note-list-delete {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: #6c757d;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.sticky-note-list-delete:hover {
+  background: #dc3545;
+  color: white;
 }
 
 h1 {

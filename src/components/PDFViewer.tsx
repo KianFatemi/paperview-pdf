@@ -9,7 +9,7 @@ import AnnotationLayer from './AnnotationLayer'; // New import
 import { v4 as uuidv4 } from 'uuid';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client'; // Type-only import
-import type { Annotation as AnnotationInterface, AnnotationType, Rect, HighlightColor } from '../types'; // Type-only imports
+import type { Annotation as AnnotationInterface, AnnotationType, Rect, HighlightColor, StickyNote } from '../types'; // Type-only imports
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
@@ -25,12 +25,14 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
   const [pdfDocument, setPdfDocument] = useState<pdfjsLib.PDFDocumentProxy | null>(null);
   const [error, setError] = useState<string | null>(null);
   const queryRef = useRef<string>(searchQuery);
-  const [annotations, setAnnotations] = useState<AnnotationInterface[]>([]); // New state for annotations
-  const [pageScales, setPageScales] = useState<{ [key: number]: number }>({}); // New state for per-page scales
+  const [annotations, setAnnotations] = useState<AnnotationInterface[]>([]); 
+  const [pageScales, setPageScales] = useState<{ [key: number]: number }>({}); 
   const [selectedHighlightColor, setSelectedHighlightColor] = useState<HighlightColor>({
     name: 'Yellow',
     value: 'rgba(255, 255, 0, 0.5)'
-  }); 
+  });
+  const [stickyNotes, setStickyNotes] = useState<StickyNote[]>([]);
+  const [stickyNoteMode, setStickyNoteMode] = useState(false); 
 
   useEffect(() => {
     queryRef.current = searchQuery;
@@ -117,7 +119,8 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
     const loadPdf = async () => {
       try {
         setError(null);
-        setAnnotations([]); 
+        setAnnotations([]);
+        setStickyNotes([]); // Clear sticky notes when loading new PDF
         const pdfDataCopy = new Uint8Array(pdfData);
         const loadingTask = pdfjsLib.getDocument(pdfDataCopy);
         const pdf = await loadingTask.promise;
@@ -171,6 +174,20 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
           const pageWrapper = document.createElement('div');
           pageWrapper.className = 'relative mb-4 shadow-lg';
           pageWrapper.setAttribute('data-page-number', String(pageNum));
+          
+          // Add click handler for sticky note placement
+          pageWrapper.style.cursor = stickyNoteMode ? 'crosshair' : 'default';
+          pageWrapper.addEventListener('click', (e) => {
+            if (stickyNoteMode && !e.defaultPrevented) {
+              const target = e.target as HTMLElement;
+              if (!target.closest('.sticky-note')) {
+                const rect = pageWrapper.getBoundingClientRect();
+                const x = (e.clientX - rect.left) / scale;
+                const y = (e.clientY - rect.top) / scale;
+                addStickyNote(pageNum, x, y);
+              }
+            }
+          });
 
           const layersDiv = document.createElement('div');
           layersDiv.className = 'pdf-layers';
@@ -261,8 +278,17 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
 
           
           const pageAnnotations = annotations.filter((a) => a.page === pageNum);
+          const pageStickyNotes = stickyNotes.filter((note) => note.page === pageNum);
           const root = createRoot(annotationLayerDiv);
-          root.render(<AnnotationLayer annotations={pageAnnotations} scale={scale} />);
+          root.render(
+            <AnnotationLayer 
+              annotations={pageAnnotations} 
+              stickyNotes={pageStickyNotes}
+              scale={scale} 
+              onStickyNoteUpdate={updateStickyNote}
+              onStickyNoteDelete={deleteStickyNote}
+            />
+          );
           reactRoots.push(root); 
         }
       } catch (error) {
@@ -275,7 +301,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
     
     return cleanup;
         
-  }, [pdfDocument, zoomLevel, annotations]); // Add annotations to deps for re-render on change
+  }, [pdfDocument, zoomLevel, annotations, stickyNotes, stickyNoteMode]); 
 
   useEffect(() => {
     if (!canvasContainerRef.current) return;
@@ -315,7 +341,6 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
     let color: string;
     if (type === 'highlight') {
       color = selectedHighlightColor.value;
-      console.log('Using highlight color:', color, 'from selectedHighlightColor:', selectedHighlightColor);
     } else {
       color = 'red';
     }
@@ -348,7 +373,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
     const textLayerRect = textLayer.getBoundingClientRect();
 
     const rects: Rect[] = clientRects
-      .filter(r => r.width > 0 && r.height > 0) // Filter out empty rects
+      .filter(r => r.width > 0 && r.height > 0) 
       .map((r) => ({
         x: (r.left - textLayerRect.left) / scale,
         y: (r.top - textLayerRect.top) / scale,
@@ -372,6 +397,33 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
     selection.removeAllRanges(); 
   };
 
+  // Sticky note handlers
+  const addStickyNote = (pageNum: number, x: number, y: number) => {
+    const newNote: StickyNote = {
+      id: uuidv4(),
+      page: pageNum,
+      x,
+      y,
+      text: '',
+      isExpanded: true,
+      timestamp: Date.now(),
+    };
+
+    setStickyNotes((prev) => [...prev, newNote]);
+    setStickyNoteMode(false);
+  };
+
+  const updateStickyNote = (noteId: string, updates: Partial<StickyNote>) => {
+    setStickyNotes((prev) =>
+      prev.map((note) => (note.id === noteId ? { ...note, ...updates } : note))
+    );
+  };
+
+  const deleteStickyNote = (noteId: string) => {
+    setStickyNotes((prev) => prev.filter((note) => note.id !== noteId));
+  };
+
+
   return (
     <div ref={canvasContainerRef} className="flex-1 overflow-auto p-4 bg-gray-800 flex flex-col items-center">
       {!pdfData && (
@@ -393,6 +445,8 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
           onApplyAnnotation={addAnnotation}
           selectedHighlightColor={selectedHighlightColor}
           onColorChange={setSelectedHighlightColor}
+          stickyNoteMode={stickyNoteMode}
+          onToggleStickyNoteMode={() => setStickyNoteMode(!stickyNoteMode)}
         />
       )}
     </div>
