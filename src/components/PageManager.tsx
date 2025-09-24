@@ -92,6 +92,7 @@ const PageManager: React.FC<PageManagerProps> = ({
   onGoToPage,
 }) => {
   const [pages, setPages] = useState<PDFPage[]>([]);
+  const [uploadedSources, setUploadedSources] = useState<Record<string, { exportData: Uint8Array; doc: pdfjsLib.PDFDocumentProxy }>>({});
   const [selectedPages, setSelectedPages] = useState<Set<string>>(new Set());
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
@@ -122,10 +123,12 @@ const PageManager: React.FC<PageManagerProps> = ({
           id: `page-${i}`,
           pageNumber: i,
           originalPageNumber: i,
+          sourceId: 'original',
         });
       }
       setPages(newPages);
       setSelectedPages(new Set());
+      setUploadedSources({});
     };
 
     initializePages();
@@ -217,6 +220,7 @@ const PageManager: React.FC<PageManagerProps> = ({
         id: newPageId,
         pageNumber: insertIndex + 1,
         originalPageNumber: -1, // Indicates blank page
+        sourceId: 'blank',
       };
 
       setPages((prev) => {
@@ -237,6 +241,7 @@ const PageManager: React.FC<PageManagerProps> = ({
           id: newPageId,
           pageNumber: insertIndex + 1,
           originalPageNumber: sourcePage.originalPageNumber,
+          sourceId: sourcePage.sourceId ?? 'original',
         };
 
         setPages((prev) => {
@@ -250,8 +255,36 @@ const PageManager: React.FC<PageManagerProps> = ({
           }));
         });
       }
+    } else if (options.type === 'upload' && options.fileData) {
+      try {
+        const viewerBytes = new Uint8Array(options.fileData);
+        const exportBytes = new Uint8Array(options.fileData);
+        const loadingTask = pdfjsLib.getDocument(viewerBytes);
+        const doc = await loadingTask.promise;
+        const sourceId = `upload-${Date.now()}`;
+        setUploadedSources(prev => ({ ...prev, [sourceId]: { exportData: exportBytes, doc } }));
+
+        const newUploadedPages: PDFPage[] = [];
+        for (let i = 1; i <= doc.numPages; i++) {
+          newUploadedPages.push({
+            id: `${sourceId}-page-${i}`,
+            pageNumber: insertIndex + i,
+            originalPageNumber: i,
+            sourceId,
+          });
+        }
+
+        setPages((prev) => {
+          const before = prev.slice(0, insertIndex);
+          const after = prev.slice(insertIndex);
+          const combined = [...before, ...newUploadedPages, ...after];
+          return combined.map((p, idx) => ({ ...p, pageNumber: idx + 1 }));
+        });
+      } catch (e) {
+        console.error('Failed to insert uploaded PDF pages:', e);
+        alert('Failed to insert uploaded PDF.');
+      }
     }
-    // TODO: Handle 'upload' type - would need file handling logic
   };
 
   const handleDuplicatePages = (pageIds: string[]) => {
@@ -312,7 +345,9 @@ const PageManager: React.FC<PageManagerProps> = ({
       }
       
       // Create the new PDF with the current page order
-      const modifiedPdfData = await createPDFFromPages(originalPdfData, pages);
+      const uploadedSourceBytes: Record<string, Uint8Array> = {};
+      Object.entries(uploadedSources).forEach(([id, v]) => { uploadedSourceBytes[id] = v.exportData; });
+      const modifiedPdfData = await createPDFFromPages(originalPdfData, pages, { uploadedSources: uploadedSourceBytes });
       
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
       const filename = `modified-document-${timestamp}.pdf`;
@@ -388,16 +423,22 @@ const PageManager: React.FC<PageManagerProps> = ({
                 strategy={rectSortingStrategy}
               >
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                  {visiblePages.map((page) => (
-                    <SortablePageThumbnail
-                      key={page.id}
-                      page={page}
-                      pdfDocument={pdfDocument}
-                      isSelected={selectedPages.has(page.id)}
-                      onSelect={handlePageSelect}
-                      onDoubleClick={handlePageDoubleClick}
-                    />
-                  ))}
+                  {visiblePages.map((page) => {
+                    const doc = page.sourceId && page.sourceId !== 'original' && page.sourceId !== 'blank'
+                      ? uploadedSources[page.sourceId]?.doc
+                      : pdfDocument;
+                    if (!doc) return null;
+                    return (
+                      <SortablePageThumbnail
+                        key={page.id}
+                        page={page}
+                        pdfDocument={doc}
+                        isSelected={selectedPages.has(page.id)}
+                        onSelect={handlePageSelect}
+                        onDoubleClick={handlePageDoubleClick}
+                      />
+                    );
+                  })}
                 </div>
               </SortableContext>
               <DragOverlay>

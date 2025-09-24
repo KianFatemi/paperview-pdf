@@ -67,6 +67,7 @@ const PageToolbar: React.FC<PageToolbarProps> = ({
           onInsertPage({
             type: 'upload',
             insertAfterPageId,
+            fileData: new Uint8Array(arrayBuffer),
           });
         }
       };

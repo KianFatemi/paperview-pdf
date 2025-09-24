@@ -4,11 +4,18 @@ import type { PDFPage } from '../types';
 
 export async function createPDFFromPages(
   originalPdfData: Uint8Array,
-  pages: PDFPage[]
+  pages: PDFPage[],
+  options?: { uploadedSources?: Record<string, Uint8Array> }
 ): Promise<Uint8Array> {
   try {
-    // Use a fresh copy so any consumers don't affect these bytes
-    const originalPdf = await PDFDocument.load(new Uint8Array(originalPdfData));
+    const originalPdf = await PDFDocument.load(new Uint8Array(originalPdfData.slice(0))); 
+    const sourceCache: Record<string, PDFDocument> = { original: originalPdf } as any;
+    if (options?.uploadedSources) {
+      for (const [sourceId, data] of Object.entries(options.uploadedSources)) {
+        const safeCopy = new Uint8Array(data.slice(0));
+        sourceCache[sourceId] = await PDFDocument.load(safeCopy);
+      }
+    }
     
     const newPdf = await PDFDocument.create();
 
@@ -18,7 +25,12 @@ export async function createPDFFromPages(
       if (page.originalPageNumber === -1) {
         await addBlankPage(newPdf);
       } else {
-        const [copiedPage] = await newPdf.copyPages(originalPdf, [page.originalPageNumber - 1]);
+        const sourceId = page.sourceId ?? 'original';
+        const srcDoc = sourceCache[sourceId];
+        if (!srcDoc) {
+          continue;
+        }
+        const [copiedPage] = await newPdf.copyPages(srcDoc, [page.originalPageNumber - 1]);
         newPdf.addPage(copiedPage);
       }
     }

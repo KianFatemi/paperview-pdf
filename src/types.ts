@@ -39,6 +39,7 @@ export interface PDFPage {
   id: string;
   pageNumber: number;
   originalPageNumber: number;
+  sourceId?: string; 
   thumbnail?: string;
   isDeleted?: boolean;
 }
@@ -55,5 +56,6 @@ export interface InsertPageOptions {
   type: 'blank' | 'upload' | 'duplicate';
   sourcePageId?: string;
   insertAfterPageId?: string;
+  fileData?: Uint8Array; // for 'upload'
 }
 
