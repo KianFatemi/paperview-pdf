@@ -7,7 +7,8 @@ export async function createPDFFromPages(
   pages: PDFPage[]
 ): Promise<Uint8Array> {
   try {
-    const originalPdf = await PDFDocument.load(originalPdfData);
+    // Use a fresh copy so any consumers don't affect these bytes
+    const originalPdf = await PDFDocument.load(new Uint8Array(originalPdfData));
     
     const newPdf = await PDFDocument.create();
 
@@ -33,7 +34,7 @@ export async function createPDFFromPages(
 
 async function addBlankPage(pdfDoc: PDFDocument): Promise<void> {
   const page = pdfDoc.addPage([595.28, 841.89]); 
-  const { width, height } = page.getSize();
+  const { height } = page.getSize();
   
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const fontSize = 12;

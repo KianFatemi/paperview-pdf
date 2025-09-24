@@ -24,7 +24,7 @@ const Toolbar: React.FC<ToolbarProps> = ({ setPdfData, setPdfDocument, handleZoo
         setPdfData(fileArray);
         
         try {
-          const loadingTask = pdfjsLib.getDocument(fileArray);
+          const loadingTask = pdfjsLib.getDocument(new Uint8Array(fileArray));
           const pdfDoc = await loadingTask.promise;
           setPdfDocument(pdfDoc);
         } catch (error) {
