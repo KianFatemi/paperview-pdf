@@ -35,4 +35,25 @@ export interface Annotation {
   color: string; 
 }
 
+export interface PDFPage {
+  id: string;
+  pageNumber: number;
+  originalPageNumber: number;
+  thumbnail?: string;
+  isDeleted?: boolean;
+}
+
+export interface PageManagementState {
+  pages: PDFPage[];
+  selectedPages: Set<string>;
+  isPageManagerOpen: boolean;
+}
+
+export type PageAction = 'reorder' | 'delete' | 'insert' | 'duplicate';
+
+export interface InsertPageOptions {
+  type: 'blank' | 'upload' | 'duplicate';
+  sourcePageId?: string;
+  insertAfterPageId?: string;
+}
 
