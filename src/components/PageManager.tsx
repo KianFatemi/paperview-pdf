@@ -81,6 +81,7 @@ interface PageManagerProps {
   onClose: () => void;
   onPageOrderChange: (newPageOrder: PDFPage[]) => void;
   onGoToPage?: (pageNumber: number) => void;
+  onApplyToViewer?: (data: Uint8Array, doc: pdfjsLib.PDFDocumentProxy) => void;
 }
 
 const PageManager: React.FC<PageManagerProps> = ({
@@ -90,12 +91,14 @@ const PageManager: React.FC<PageManagerProps> = ({
   onClose,
   onPageOrderChange,
   onGoToPage,
+  onApplyToViewer,
 }) => {
   const [pages, setPages] = useState<PDFPage[]>([]);
   const [uploadedSources, setUploadedSources] = useState<Record<string, { exportData: Uint8Array; doc: pdfjsLib.PDFDocumentProxy }>>({});
   const [selectedPages, setSelectedPages] = useState<Set<string>>(new Set());
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [isApplying, setIsApplying] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -362,6 +365,25 @@ const PageManager: React.FC<PageManagerProps> = ({
     }
   };
 
+  const handleApplyToViewer = async () => {
+    if (!pdfDocument || !originalPdfData || !onApplyToViewer) return;
+    setIsApplying(true);
+    try {
+      const { createPDFFromPages } = await import('../utils/pdfManipulation');
+      const uploadedSourceBytes: Record<string, Uint8Array> = {};
+      Object.entries(uploadedSources).forEach(([id, v]) => { uploadedSourceBytes[id] = v.exportData; });
+      const modifiedPdfData = await createPDFFromPages(originalPdfData, pages, { uploadedSources: uploadedSourceBytes });
+      const loadingTask = pdfjsLib.getDocument(new Uint8Array(modifiedPdfData));
+      const newDoc = await loadingTask.promise;
+      onApplyToViewer(modifiedPdfData, newDoc);
+    } catch (e) {
+      console.error('Failed to apply changes to viewer:', e);
+      alert('Failed to apply to viewer.');
+    } finally {
+      setIsApplying(false);
+    }
+  };
+
   const visiblePages = pages.filter(p => !p.isDeleted);
   const activeItem = pages.find(page => page.id === activeId);
 
@@ -392,6 +414,8 @@ const PageManager: React.FC<PageManagerProps> = ({
           onClearSelection={handleClearSelection}
           onExportPDF={handleExportPDF}
           isExporting={isExporting}
+          onApplyToViewer={onApplyToViewer ? handleApplyToViewer : undefined}
+          isApplying={isApplying}
         />
 
         <div className="flex-1 overflow-auto p-4 bg-gray-50">

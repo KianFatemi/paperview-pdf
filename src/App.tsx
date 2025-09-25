@@ -90,6 +90,11 @@ function App() {
         onClose={handleClosePageManager}
         onPageOrderChange={handlePageOrderChange}
         onGoToPage={handleGoToPage}
+        onApplyToViewer={(data, doc) => {
+          setPdfData(data);
+          setPdfDocument(doc);
+          setActivePage(1);
+        }}
       />
     </div>
   );

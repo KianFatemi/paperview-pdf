@@ -34,6 +34,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
     value: 'rgba(255, 255, 0, 0.5)'
   });
   const [stickyNotes, setStickyNotes] = useState<StickyNote[]>([]); 
+  const renderRunIdRef = useRef(0);
 
   useEffect(() => {
     queryRef.current = searchQuery;
@@ -142,6 +143,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
     let observers: ResizeObserver[] = [];
     let highlightTimeouts: NodeJS.Timeout[] = [];
     let reactRoots: Root[] = []; 
+    const runId = ++renderRunIdRef.current;
 
     const cleanup = () => {
       observers.forEach(observer => observer.disconnect());
@@ -150,6 +152,10 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
       observers = [];
       highlightTimeouts = [];
       reactRoots = [];
+      const containerEl = canvasContainerRef.current;
+      if (containerEl) {
+        containerEl.innerHTML = '';
+      }
     };
 
     const renderPdf = async () => {
@@ -157,11 +163,14 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
         const container = canvasContainerRef.current;
         if (!container) return;
         container.innerHTML = '';
+        if (renderRunIdRef.current !== runId) return;
 
         const containerWidth = container.offsetWidth - 32;
 
         for (let pageNum = 1; pageNum <= pdfDocument.numPages; pageNum++) {
+          if (renderRunIdRef.current !== runId) return;
           const page = await pdfDocument.getPage(pageNum);
+          if (renderRunIdRef.current !== runId) return;
 
           
           const viewport = page.getViewport({ scale: 1 });
@@ -246,6 +255,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
           };
           
           await page.render(renderContext).promise;
+          if (renderRunIdRef.current !== runId) return;
 
           const textContent = await page.getTextContent();
           const textLayer = new (pdfjsLib as any).TextLayer({
@@ -254,6 +264,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
             viewport: scaledViewport.clone({ dontFlip: true }),
           });
           await textLayer.render();
+          if (renderRunIdRef.current !== runId) return;
 
           await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
           

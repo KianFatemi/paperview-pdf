@@ -11,6 +11,8 @@ interface PageToolbarProps {
   onClearSelection: () => void;
   onExportPDF: () => void;
   isExporting?: boolean;
+  onApplyToViewer?: () => void;
+  isApplying?: boolean;
 }
 
 const PageToolbar: React.FC<PageToolbarProps> = ({
@@ -23,6 +25,8 @@ const PageToolbar: React.FC<PageToolbarProps> = ({
   onClearSelection,
   onExportPDF,
   isExporting = false,
+  onApplyToViewer,
+  isApplying = false,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -184,7 +188,28 @@ const PageToolbar: React.FC<PageToolbarProps> = ({
         </div>
       </div>
 
-      <div className="flex items-center">
+      <div className="flex items-center space-x-2">
+        {onApplyToViewer && (
+          <button
+            onClick={onApplyToViewer}
+            disabled={isApplying}
+            className="flex items-center space-x-2 px-4 py-2 bg-emerald-500 text-white rounded hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {isApplying ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>Applying...</span>
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Apply to Viewer</span>
+              </>
+            )}
+          </button>
+        )}
         <button
           onClick={onExportPDF}
           disabled={isExporting}
