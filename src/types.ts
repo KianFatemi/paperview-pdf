@@ -59,3 +59,18 @@ export interface InsertPageOptions {
   fileData?: Uint8Array; // for 'upload'
 }
 
+export interface ChatMessage {
+  id: string;
+  type: 'user' | 'assistant';
+  content: string;
+  timestamp: number;
+  isStreaming?: boolean;
+}
+
+export interface AIContext {
+  pdfText: string;
+  currentPage: number;
+  totalPages: number;
+  selectedText?: string;
+}
+

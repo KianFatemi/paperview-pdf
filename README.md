@@ -5,6 +5,7 @@ A cross platform PDF viewer built with Electron, React, and TypeScript. PaperVie
 ## Features
 
 - **PDF Viewing**: High quality PDF rendering with smooth scrolling
+- **AI Assistant**: Powered by Google Gemini AI for document analysis and Q&A
 - **Full-Text Search**: Search through PDF content with highlighted results and context preview
 - **Thumbnail Navigation**: Quick page navigation with thumbnail sidebar
 - **Zoom Controls**: Zoom in and zoom out with fit to screen
@@ -16,6 +17,7 @@ A cross platform PDF viewer built with Electron, React, and TypeScript. PaperVie
 - **Frontend**: React 19 + TypeScript
 - **Desktop**: Electron 38
 - **PDF Engine**: PDF.js 5.4
+- **AI Engine**: Google Gemini API
 - **Styling**: Tailwind CSS 4.1
 - **Build Tool**: Vite 7
 
@@ -39,7 +41,15 @@ A cross platform PDF viewer built with Electron, React, and TypeScript. PaperVie
    npm install
    ```
 
-3. **Start development server**
+3. **Configure AI Assistant (Optional)**
+   ```bash
+   # Create .env file and add your Gemini API key
+   echo "VITE_GEMINI_API_KEY=your_api_key_here" > .env
+   ```
+   - Get a free API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+   - The AI assistant will be disabled without a valid API key
+
+4. **Start development server**
    ```bash
    npm run dev
    ```
@@ -65,9 +75,15 @@ paperview/
 │   ├── components/        # React components
 │   │   ├── PDFViewer.tsx      # Main PDF display component
 │   │   ├── PDFSearchOverlay.tsx # Search functionality
+│   │   ├── AISidePanel.tsx    # AI assistant panel
+│   │   ├── AIChatBox.tsx      # AI chat interface
+│   │   ├── AIButton.tsx       # AI toggle button
 │   │   ├── Sidebar.tsx        # Thumbnail navigation
 │   │   ├── Toolbar.tsx        # Top toolbar with controls
 │   │   └── ThumbnailView.tsx  # Page thumbnails
+│   ├── utils/             # Utility functions
+│   │   ├── geminiApi.ts       # Gemini AI integration
+│   │   └── pdfTextExtractor.ts # PDF text extraction
 │   ├── App.tsx            # Main application component
 │   ├── main.tsx           # React entry point
 │   └── types.ts           # TypeScript type definitions
@@ -97,6 +113,8 @@ paperview/
 
 ## Roadmap
 
+- [x] AI Assistant integration
+- [ ] Enhanced AI features (image analysis, table extraction)
 - [ ] Annotation support
 - [ ] Bookmarks functionality  
 - [ ] Print support

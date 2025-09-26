@@ -4,6 +4,8 @@ import Sidebar from './components/Sidebar';
 import PDFViewer from './components/PDFViewer';
 import PDFSearchOverlay from './components/PDFSearchOverlay';
 import PageManager from './components/PageManager';
+import AISidePanel from './components/AISidePanel';
+import AIButton from './components/AIButton';
 import type { PDFPage, PageManagementState } from './types';
 import * as pdfjsLib from 'pdfjs-dist';
 
@@ -21,6 +23,7 @@ function App() {
     selectedPages: new Set(),
     isPageManagerOpen: false,
   });
+  const [isAIPanelOpen, setIsAIPanelOpen] = useState<boolean>(false);
 
   const handleZoomIn = useCallback(() => setZoomLevel((prevZoom) => prevZoom + 0.1), []);
   const handleZoomOut = useCallback(() => setZoomLevel((prevZoom) => Math.max(0.1, prevZoom - 0.1)), []);
@@ -40,6 +43,10 @@ function App() {
 
   const handleGoToPage = useCallback((pageNumber: number) => {
     setActivePage(pageNumber);
+  }, []);
+
+  const handleToggleAIPanel = useCallback(() => {
+    setIsAIPanelOpen(prev => !prev);
   }, []); 
 
   return (
@@ -80,6 +87,14 @@ function App() {
               onClear={() => setSearchQuery('')}
             />
           )}
+          
+          <div className="absolute bottom-6 right-6 z-10">
+            <AIButton
+              isOpen={isAIPanelOpen}
+              onClick={handleToggleAIPanel}
+              disabled={!pdfDocument}
+            />
+          </div>
         </div>
       </main>
       
@@ -95,6 +110,13 @@ function App() {
           setPdfDocument(doc);
           setActivePage(1);
         }}
+      />
+      
+      <AISidePanel
+        isOpen={isAIPanelOpen}
+        onClose={() => setIsAIPanelOpen(false)}
+        pdfDocument={pdfDocument}
+        currentPage={activePage}
       />
     </div>
   );
