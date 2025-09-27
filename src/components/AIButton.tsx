@@ -22,23 +22,9 @@ const AIButton: React.FC<AIButtonProps> = ({ isOpen, onClick, disabled = false }
       `}
       title={disabled ? 'AI Assistant (API key required)' : isOpen ? 'Close AI Assistant' : 'Open AI Assistant'}
     >
-      <svg 
-        width="20" 
-        height="20" 
-        viewBox="0 0 24 24" 
-        fill="none" 
-        stroke="currentColor" 
-        strokeWidth="2" 
-        strokeLinecap="round" 
-        strokeLinejoin="round"
-        className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-      >
-        <path d="M9 18l6-6-6-6"/>
-        <circle cx="12" cy="12" r="3"/>
-        <path d="M12 1v6m0 6v6"/>
-        <path d="m5.64 7.64 4.24 4.24m4.24 0 4.24-4.24"/>
-        <path d="m7.64 18.36 4.24-4.24m4.24 0 4.24 4.24"/>
-      </svg>
+      <div className="text-lg font-bold">
+        ✨
+      </div>
       
       <div className={`
         absolute -top-1 -right-1 w-3 h-3 rounded-full transition-all duration-200
