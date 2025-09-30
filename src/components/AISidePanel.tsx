@@ -133,10 +133,8 @@ const AISidePanel: React.FC<AISidePanelProps> = ({
     setError(null);
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-y-0 right-0 w-96 bg-gray-800 border-l border-gray-600 shadow-2xl z-50 flex flex-col">
+    <div className={`fixed inset-y-0 right-0 w-96 bg-gray-800 border-l border-gray-600 shadow-2xl z-50 flex flex-col transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
       <div className="flex items-center justify-between p-4 border-b border-gray-600">
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2">

@@ -56,7 +56,7 @@ function App() {
         activePage={activePage}
         setActivePage={setActivePage} 
       />
-      <main className="flex-1 flex flex-col overflow-hidden relative min-h-0">
+      <main className={`flex-1 flex flex-col overflow-hidden relative min-h-0 transition-all duration-300 ${isAIPanelOpen ? 'mr-96' : ''}`}>
         <Toolbar 
           setPdfData={setPdfData}
           setPdfDocument={setPdfDocument}
