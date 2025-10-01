@@ -5,11 +5,11 @@ import * as pdfjsLib from 'pdfjs-dist';
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { useCopyText } from '../hooks/useCopyText';
 import PDFContextMenu from './PDFContextMenu';
-import AnnotationLayer from './AnnotationLayer'; // New import
+import AnnotationLayer from './AnnotationLayer';
 import { v4 as uuidv4 } from 'uuid';
 import { createRoot } from 'react-dom/client';
-import type { Root } from 'react-dom/client'; // Type-only import
-import type { Annotation as AnnotationInterface, AnnotationType, Rect, HighlightColor, StickyNote } from '../types'; // Type-only imports
+import type { Root } from 'react-dom/client'; 
+import type { Annotation as AnnotationInterface, AnnotationType, Rect, HighlightColor, StickyNote } from '../types'; 
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
@@ -20,9 +20,10 @@ interface PDFViewerProps {
   searchQuery?: string;
   stickyNoteMode: boolean;
   onToggleStickyNoteMode: () => void;
+  onPageChange?: (page: number) => void;
 }
 
-const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, searchQuery = '', stickyNoteMode, onToggleStickyNoteMode }) => {
+const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, searchQuery = '', stickyNoteMode, onToggleStickyNoteMode, onPageChange }) => {
   const canvasContainerRef = useRef<HTMLDivElement>(null);
   const [pdfDocument, setPdfDocument] = useState<pdfjsLib.PDFDocumentProxy | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -142,16 +143,21 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
 
     let observers: ResizeObserver[] = [];
     let highlightTimeouts: NodeJS.Timeout[] = [];
-    let reactRoots: Root[] = []; 
+    let reactRoots: Root[] = [];
+    let pageObserver: IntersectionObserver | null = null;
     const runId = ++renderRunIdRef.current;
 
     const cleanup = () => {
       observers.forEach(observer => observer.disconnect());
       highlightTimeouts.forEach(timeout => clearTimeout(timeout));
       reactRoots.forEach(root => setTimeout(() => root.unmount(), 0));
+      if (pageObserver) {
+        pageObserver.disconnect();
+      }
       observers = [];
       highlightTimeouts = [];
       reactRoots = [];
+      pageObserver = null;
       const containerEl = canvasContainerRef.current;
       if (containerEl) {
         containerEl.innerHTML = '';
@@ -303,6 +309,33 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
           );
           reactRoots.push(root); 
         }
+
+        // Set up Intersection Observer to track the current page
+        if (onPageChange && container) {
+          const observerOptions = {
+            root: container,
+            rootMargin: '-40% 0px -40% 0px',
+            threshold: 0,
+          };
+
+          const observerCallback = (entries: IntersectionObserverEntry[]) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                const pageNumber = parseInt(
+                  entry.target.getAttribute('data-page-number') || '0'
+                );
+                if (pageNumber > 0) {
+                  onPageChange(pageNumber);
+                }
+              }
+            });
+          };
+
+          pageObserver = new IntersectionObserver(observerCallback, observerOptions);
+
+          const pageWrappers = container.querySelectorAll('[data-page-number]');
+          pageWrappers.forEach((wrapper) => pageObserver?.observe(wrapper));
+        }
       } catch (error) {
         console.error('Error rendering PDF:', error);
         setError('Failed to render PDF');
@@ -313,7 +346,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
     
     return cleanup;
         
-  }, [pdfDocument, zoomLevel, annotations, stickyNotes, stickyNoteMode]); 
+  }, [pdfDocument, zoomLevel, annotations, stickyNotes, stickyNoteMode, onPageChange]); 
 
   useEffect(() => {
     if (!canvasContainerRef.current) return;

@@ -77,6 +77,7 @@ function App() {
             searchQuery={searchQuery}
             stickyNoteMode={stickyNoteMode}
             onToggleStickyNoteMode={() => setStickyNoteMode(!stickyNoteMode)}
+            onPageChange={setActivePage}
           />
           {isSearchOpen && (
             <PDFSearchOverlay
