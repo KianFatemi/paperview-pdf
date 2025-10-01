@@ -6,6 +6,12 @@ export interface ExtractedPageText {
   text: string;
 }
 
+export interface PageTextWithMetadata {
+  pageNumber: number;
+  text: string;
+  wordCount: number;
+}
+
 export class PDFTextExtractor {
   static async extractAllText(pdfDocument: pdfjsLib.PDFDocumentProxy): Promise<string> {
     try {
@@ -80,6 +86,28 @@ export class PDFTextExtractor {
     } catch (error) {
       console.error('Error extracting relevant context:', error);
       return '';
+    }
+  }
+
+  static async extractAllPagesWithMetadata(
+    pdfDocument: pdfjsLib.PDFDocumentProxy
+  ): Promise<PageTextWithMetadata[]> {
+    try {
+      const results: PageTextWithMetadata[] = [];
+      
+      for (let pageNum = 1; pageNum <= pdfDocument.numPages; pageNum++) {
+        const text = await this.extractPageText(pdfDocument, pageNum);
+        results.push({
+          pageNumber: pageNum,
+          text,
+          wordCount: text.split(/\s+/).filter(w => w.length > 0).length
+        });
+      }
+      
+      return results;
+    } catch (error) {
+      console.error('Error extracting all pages with metadata:', error);
+      return [];
     }
   }
 }

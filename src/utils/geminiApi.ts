@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import type { AIContext } from '../types';
+import type { AIContext, SemanticSearchResponse, SemanticSearchResult } from '../types';
+import type { PageTextWithMetadata } from './pdfTextExtractor';
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
@@ -81,6 +82,68 @@ export class GeminiService {
     Please provide helpful and accurate responses based on the document content provided above.`;
 
     return prompt;
+  }
+
+  async performSemanticSearch(
+    query: string,
+    allPagesText: PageTextWithMetadata[]
+  ): Promise<SemanticSearchResponse> {
+    try {
+      const pagesContent = allPagesText
+        .map(({ pageNumber, text }) => `[PAGE ${pageNumber}]\n${text}`)
+        .join('\n\n');
+
+      const searchPrompt = `You are a precise document search assistant. Analyze the following document and find ALL pages that contain information relevant to the user's query.
+
+User Query: "${query}"
+
+Document Content:
+${pagesContent}
+
+Instructions:
+1. Identify ALL pages that contain information related to the query
+2. For each relevant page, extract a brief snippet (1-2 sentences) that shows why it's relevant
+3. Be thorough - include all pages with even tangential relevance
+4. Return your response as a JSON object with this exact format:
+{
+  "results": [
+    {
+      "pageNumber": 1,
+      "snippet": "Brief relevant text from the page"
+    }
+  ],
+  "summary": "Brief summary of where the information was found"
+}
+
+IMPORTANT: Return ONLY the JSON object, no additional text or markdown formatting.`;
+
+      const result = await this.model.generateContent(searchPrompt);
+      const response = await result.response;
+      const responseText = response.text().trim();
+      
+      let jsonText = responseText;
+      
+      if (jsonText.includes('```')) {
+        const jsonMatch = jsonText.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+        if (jsonMatch) {
+          jsonText = jsonMatch[1];
+        }
+      }
+      
+      const parsed = JSON.parse(jsonText) as SemanticSearchResponse;
+      
+      const validResults = parsed.results
+        .filter(r => r.pageNumber > 0 && r.pageNumber <= allPagesText.length)
+        .sort((a, b) => a.pageNumber - b.pageNumber);
+      
+      return {
+        results: validResults,
+        summary: parsed.summary || `Found ${validResults.length} relevant page(s)`
+      };
+    } catch (error) {
+      console.error('Semantic search error:', error);
+      throw new Error('Failed to perform semantic search. Please try again.');
+    }
   }
 
   isConfigured(): boolean {

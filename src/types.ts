@@ -65,6 +65,7 @@ export interface ChatMessage {
   content: string;
   timestamp: number;
   isStreaming?: boolean;
+  searchResults?: SemanticSearchResult[];
 }
 
 export interface AIContext {
@@ -72,5 +73,16 @@ export interface AIContext {
   currentPage: number;
   totalPages: number;
   selectedText?: string;
+}
+
+export interface SemanticSearchResult {
+  pageNumber: number;
+  snippet: string;
+  relevanceScore?: number;
+}
+
+export interface SemanticSearchResponse {
+  results: SemanticSearchResult[];
+  summary: string;
 }
 

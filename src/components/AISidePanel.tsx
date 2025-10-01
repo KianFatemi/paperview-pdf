@@ -12,6 +12,7 @@ interface AISidePanelProps {
   pdfDocument: pdfjsLib.PDFDocumentProxy | null;
   currentPage: number;
   selectedText?: string;
+  onNavigateToPage: (pageNumber: number) => void;
 }
 
 const AISidePanel: React.FC<AISidePanelProps> = ({
@@ -19,7 +20,8 @@ const AISidePanel: React.FC<AISidePanelProps> = ({
   onClose,
   pdfDocument,
   currentPage,
-  selectedText
+  selectedText,
+  onNavigateToPage
 }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -133,6 +135,43 @@ const AISidePanel: React.FC<AISidePanelProps> = ({
     setError(null);
   };
 
+  const handleSemanticSearch = useCallback(async (query: string) => {
+    if (!pdfDocument || !isConfigured) return;
+
+    const userMessageObj: ChatMessage = {
+      id: uuidv4(),
+      type: 'user',
+      content: query,
+      timestamp: Date.now(),
+    };
+
+    setMessages(prev => [...prev, userMessageObj]);
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const allPagesText = await PDFTextExtractor.extractAllPagesWithMetadata(pdfDocument);
+      
+      const searchResponse = await geminiService.performSemanticSearch(query, allPagesText);
+      
+      const assistantMessage: ChatMessage = {
+        id: uuidv4(),
+        type: 'assistant',
+        content: searchResponse.summary,
+        timestamp: Date.now(),
+        searchResults: searchResponse.results,
+      };
+
+      setMessages(prev => [...prev, assistantMessage]);
+    } catch (err) {
+      console.error('Error performing semantic search:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to perform semantic search';
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [pdfDocument, isConfigured]);
+
   return (
     <div className={`fixed inset-y-0 right-0 w-96 bg-gray-800 border-l border-gray-600 shadow-2xl z-50 flex flex-col transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
       <div className="flex items-center justify-between p-4 border-b border-gray-600">
@@ -231,6 +270,8 @@ const AISidePanel: React.FC<AISidePanelProps> = ({
         <AIChatBox
           messages={messages}
           onSendMessage={handleSendMessage}
+          onSemanticSearch={handleSemanticSearch}
+          onNavigateToPage={onNavigateToPage}
           isLoading={isLoading}
           disabled={!isConfigured || !pdfDocument || isExtractingText}
           placeholder={

@@ -117,6 +117,7 @@ function App() {
         onClose={() => setIsAIPanelOpen(false)}
         pdfDocument={pdfDocument}
         currentPage={activePage}
+        onNavigateToPage={setActivePage}
       />
     </div>
   );
