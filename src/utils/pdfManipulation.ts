@@ -1,4 +1,4 @@
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import { PDFDocument } from 'pdf-lib';
 import type { PDFPage } from '../types';
 
 
@@ -22,17 +22,13 @@ export async function createPDFFromPages(
     for (const page of pages) {
       if (page.isDeleted) continue;
 
-      if (page.originalPageNumber === -1) {
-        await addBlankPage(newPdf);
-      } else {
-        const sourceId = page.sourceId ?? 'original';
-        const srcDoc = sourceCache[sourceId];
-        if (!srcDoc) {
-          continue;
-        }
-        const [copiedPage] = await newPdf.copyPages(srcDoc, [page.originalPageNumber - 1]);
-        newPdf.addPage(copiedPage);
+      const sourceId = page.sourceId ?? 'original';
+      const srcDoc = sourceCache[sourceId];
+      if (!srcDoc) {
+        continue;
       }
+      const [copiedPage] = await newPdf.copyPages(srcDoc, [page.originalPageNumber - 1]);
+      newPdf.addPage(copiedPage);
     }
 
     const pdfBytes = await newPdf.save();
@@ -41,23 +37,6 @@ export async function createPDFFromPages(
     console.error('Error creating PDF from pages:', error);
     throw new Error('Failed to create PDF from pages');
   }
-}
-
-
-async function addBlankPage(pdfDoc: PDFDocument): Promise<void> {
-  const page = pdfDoc.addPage([595.28, 841.89]); 
-  const { height } = page.getSize();
-  
-  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const fontSize = 12;
-  
-  page.drawText('This is a blank page', {
-    x: 50,
-    y: height - 50,
-    size: fontSize,
-    font,
-    color: rgb(0.7, 0.7, 0.7),
-  });
 }
 
 export async function insertPagesFromPDF(

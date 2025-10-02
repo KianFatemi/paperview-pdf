@@ -217,26 +217,7 @@ const PageManager: React.FC<PageManagerProps> = ({
       }
     }
 
-    if (options.type === 'blank') {
-      const newPageId = `page-blank-${Date.now()}`;
-      const newPage: PDFPage = {
-        id: newPageId,
-        pageNumber: insertIndex + 1,
-        originalPageNumber: -1, // Indicates blank page
-        sourceId: 'blank',
-      };
-
-      setPages((prev) => {
-        const newPages = [...prev];
-        newPages.splice(insertIndex, 0, newPage);
-        
-        // Update page numbers
-        return newPages.map((page, index) => ({
-          ...page,
-          pageNumber: index + 1,
-        }));
-      });
-    } else if (options.type === 'duplicate' && options.sourcePageId) {
+    if (options.type === 'duplicate' && options.sourcePageId) {
       const sourcePage = pages.find(p => p.id === options.sourcePageId);
       if (sourcePage) {
         const newPageId = `page-duplicate-${Date.now()}`;
@@ -448,7 +429,7 @@ const PageManager: React.FC<PageManagerProps> = ({
               >
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                   {visiblePages.map((page) => {
-                    const doc = page.sourceId && page.sourceId !== 'original' && page.sourceId !== 'blank'
+                    const doc = page.sourceId && page.sourceId !== 'original'
                       ? uploadedSources[page.sourceId]?.doc
                       : pdfDocument;
                     if (!doc) return null;

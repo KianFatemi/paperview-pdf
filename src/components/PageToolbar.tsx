@@ -46,14 +46,6 @@ const PageToolbar: React.FC<PageToolbarProps> = ({
     }
   };
 
-  const handleInsertBlankPage = () => {
-    const insertAfterPageId = selectedPageIds.length > 0 ? selectedPageIds[selectedPageIds.length - 1] : undefined;
-    onInsertPage({
-      type: 'blank',
-      insertAfterPageId,
-    });
-  };
-
   const handleInsertFromFile = () => {
     fileInputRef.current?.click();
   };
@@ -130,17 +122,6 @@ const PageToolbar: React.FC<PageToolbarProps> = ({
 
       <div className="flex items-center space-x-2">
         <div className="flex items-center space-x-1">
-          <button
-            onClick={handleInsertBlankPage}
-            className="flex items-center space-x-1 px-3 py-1.5 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-            title="Insert blank page"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            <span>Blank Page</span>
-          </button>
-
           <button
             onClick={handleInsertFromFile}
             className="flex items-center space-x-1 px-3 py-1.5 text-sm bg-green-500 text-white rounded hover:bg-green-600 transition-colors"

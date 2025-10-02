@@ -53,7 +53,7 @@ export interface PageManagementState {
 export type PageAction = 'reorder' | 'delete' | 'insert' | 'duplicate';
 
 export interface InsertPageOptions {
-  type: 'blank' | 'upload' | 'duplicate';
+  type: 'upload' | 'duplicate';
   sourcePageId?: string;
   insertAfterPageId?: string;
   fileData?: Uint8Array; // for 'upload'
