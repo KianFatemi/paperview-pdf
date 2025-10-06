@@ -504,3 +504,273 @@ button:focus-visible {
   background: none;
   padding: 0;
 }
+
+/* Form Layer and Field Styles */
+.form-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 15;
+}
+
+.form-field-wrapper {
+  pointer-events: auto;
+}
+
+.form-field {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: 12px;
+}
+
+.form-field-text {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #3b82f6;
+  border-radius: 2px;
+  padding: 2px 4px;
+  color: #000;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.form-field-text:focus {
+  background: rgba(255, 255, 255, 1);
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+.form-field-text:disabled,
+.form-field-text:read-only {
+  background: rgba(229, 231, 235, 0.8);
+  border-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.form-field-textarea {
+  resize: vertical;
+  min-height: 40px;
+  line-height: 1.4;
+}
+
+.form-field-checkbox-wrapper,
+.form-field-radio-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.form-field-checkbox,
+.form-field-radio {
+  width: 16px !important;
+  height: 16px !important;
+  cursor: pointer;
+  accent-color: #3b82f6;
+}
+
+.form-field-checkbox:disabled,
+.form-field-radio:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.form-field-select {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #3b82f6;
+  border-radius: 2px;
+  padding: 2px 4px;
+  color: #000;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.form-field-select:focus {
+  background: rgba(255, 255, 255, 1);
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+.form-field-select:disabled {
+  background: rgba(229, 231, 235, 0.8);
+  border-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.form-field-select option {
+  background: white;
+  color: #000;
+  padding: 4px;
+}
+
+.form-field-button {
+  background: #3b82f6;
+  color: white;
+  border: 1px solid #2563eb;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.form-field-button:hover:not(:disabled) {
+  background: #2563eb;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
+}
+
+.form-field-button:disabled {
+  background: #9ca3af;
+  border-color: #6b7280;
+  cursor: not-allowed;
+}
+
+.form-field-signature-wrapper {
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px dashed #3b82f6;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.form-field-signature {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.signature-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.signature-placeholder {
+  color: #6b7280;
+  font-size: 12px;
+  text-align: center;
+  padding: 4px;
+}
+
+/* Form Toolbar Styles */
+.form-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: linear-gradient(to right, #dbeafe, #bfdbfe);
+  border-bottom: 2px solid #3b82f6;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  width: 100%;
+}
+
+.form-toolbar-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.form-toolbar-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.form-icon {
+  color: #3b82f6;
+  flex-shrink: 0;
+}
+
+.form-toolbar-text {
+  font-weight: 600;
+  color: #1e40af;
+  font-size: 14px;
+}
+
+.form-toolbar-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.form-toolbar-button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.form-toolbar-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.form-toolbar-button-primary {
+  background: #3b82f6;
+  color: white;
+  border-color: #2563eb;
+}
+
+.form-toolbar-button-primary:hover:not(:disabled) {
+  background: #2563eb;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.4);
+}
+
+.form-toolbar-button-secondary {
+  background: white;
+  color: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.form-toolbar-button-secondary:hover:not(:disabled) {
+  background: #eff6ff;
+  border-color: #2563eb;
+}
+
+.form-toolbar-message {
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  text-align: center;
+  animation: messageSlideIn 0.3s ease-out;
+}
+
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.form-toolbar-error {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.form-toolbar-success {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}

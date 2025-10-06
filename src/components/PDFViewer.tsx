@@ -6,10 +6,13 @@ import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { useCopyText } from '../hooks/useCopyText';
 import PDFContextMenu from './PDFContextMenu';
 import AnnotationLayer from './AnnotationLayer';
+import FormLayer from './FormLayer';
+import FormToolbar from './FormToolbar';
 import { v4 as uuidv4 } from 'uuid';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client'; 
-import type { Annotation as AnnotationInterface, AnnotationType, Rect, HighlightColor, StickyNote } from '../types'; 
+import type { Annotation as AnnotationInterface, AnnotationType, Rect, HighlightColor, StickyNote, FormField } from '../types';
+import { extractAllFormFields, hasFormFields } from '../utils/formUtils'; 
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
@@ -36,6 +39,9 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
   });
   const [stickyNotes, setStickyNotes] = useState<StickyNote[]>([]); 
   const renderRunIdRef = useRef(0);
+  const [formFields, setFormFields] = useState<FormField[]>([]);
+  const [hasInteractiveForms, setHasInteractiveForms] = useState(false);
+  const formRootsRef = useRef<Map<number, Root>>(new Map());
 
   useEffect(() => {
     queryRef.current = searchQuery;
@@ -123,11 +129,22 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
       try {
         setError(null);
         setAnnotations([]);
-        setStickyNotes([]); // Clear sticky notes when loading new PDF
+        setStickyNotes([]);
+        setFormFields([]); 
+        setHasInteractiveForms(false);
+        
         const pdfDataCopy = new Uint8Array(pdfData);
         const loadingTask = pdfjsLib.getDocument(pdfDataCopy);
         const pdf = await loadingTask.promise;
         setPdfDocument(pdf);
+        
+        const hasForms = await hasFormFields(pdf);
+        setHasInteractiveForms(hasForms);
+        
+        if (hasForms) {
+          const fields = await extractAllFormFields(pdf);
+          setFormFields(fields);
+        }
       } catch (error) {
         console.error('Error loading PDF:', error);
         setError('Failed to load PDF');
@@ -154,6 +171,9 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
       if (pageObserver) {
         pageObserver.disconnect();
       }
+      formRootsRef.current.forEach(root => setTimeout(() => root.unmount(), 0));
+      formRootsRef.current.clear();
+      
       observers = [];
       highlightTimeouts = [];
       reactRoots = [];
@@ -232,6 +252,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
           textLayerDiv.style.top = '0px';
           textLayerDiv.style.width = `${scaledViewport.width}px`;
           textLayerDiv.style.height = `${scaledViewport.height}px`;
+          textLayerDiv.style.zIndex = '5';
           textLayerDiv.style.setProperty('--total-scale-factor', `${scale}`);
 
           setPageScales((prev) => ({ ...prev, [pageNum]: scale }));
@@ -245,9 +266,19 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
           annotationLayerDiv.style.width = `${scaledViewport.width}px`;
           annotationLayerDiv.style.height = `${scaledViewport.height}px`;
 
+          const formLayerDiv = document.createElement('div');
+          formLayerDiv.className = 'pdf-layer__form';
+          formLayerDiv.style.position = 'absolute';
+          formLayerDiv.style.left = '0px';
+          formLayerDiv.style.top = '0px';
+          formLayerDiv.style.width = `${scaledViewport.width}px`;
+          formLayerDiv.style.height = `${scaledViewport.height}px`;
+          formLayerDiv.style.zIndex = '20';
+
           layersDiv.appendChild(canvasDiv);
           layersDiv.appendChild(textLayerDiv);
-          layersDiv.appendChild(annotationLayerDiv); 
+          layersDiv.appendChild(annotationLayerDiv);
+          layersDiv.appendChild(formLayerDiv); 
 
           pageWrapper.appendChild(layersDiv);
           container.appendChild(pageWrapper);
@@ -307,7 +338,20 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
               onStickyNoteDelete={deleteStickyNote}
             />
           );
-          reactRoots.push(root); 
+          reactRoots.push(root);
+
+          const pageFormFields = formFields.filter((field) => field.page === pageNum);
+          if (pageFormFields.length > 0) {
+            const formRoot = createRoot(formLayerDiv);
+            formRoot.render(
+              <FormLayer 
+                fields={pageFormFields}
+                scale={scale}
+                onFieldChange={handleFormFieldChange}
+              />
+            );
+            formRootsRef.current.set(pageNum, formRoot);
+          } 
         }
 
         // Set up Intersection Observer to track the current page
@@ -346,7 +390,27 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
     
     return cleanup;
         
-  }, [pdfDocument, zoomLevel, annotations, stickyNotes, stickyNoteMode, onPageChange]); 
+  }, [pdfDocument, zoomLevel, annotations, stickyNotes, stickyNoteMode, onPageChange]);
+
+  useEffect(() => {
+    if (!pdfDocument || formFields.length === 0) return;
+    if (formRootsRef.current.size === 0) return;
+
+    formRootsRef.current.forEach((formRoot, pageNum) => {
+      const pageScale = pageScales[pageNum];
+      if (!pageScale) return;
+
+      const pageFormFields = formFields.filter((field) => field.page === pageNum);
+
+      formRoot.render(
+        <FormLayer 
+          fields={pageFormFields}
+          scale={pageScale}
+          onFieldChange={handleFormFieldChange}
+        />
+      );
+    });
+  }, [formFields]); 
 
   useEffect(() => {
     if (!canvasContainerRef.current) return;
@@ -378,6 +442,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
     
     return () => clearTimeout(timeout);
   }, [searchQuery]);
+
 
   const { menuPosition, setMenuPosition, handleCopy } = useCopyText(canvasContainerRef);
 
@@ -468,30 +533,58 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
     setStickyNotes((prev) => prev.filter((note) => note.id !== noteId));
   };
 
+  // Form field handlers
+  const handleFormFieldChange = (fieldId: string, value: string | boolean | string[]) => {
+    setFormFields((prev) =>
+      prev.map((field): FormField => {
+        if (field.id === fieldId) {
+          return { ...field, value } as FormField;
+        }
+        return field;
+      })
+    );
+  };
+
+  const handleFormSave = (filledPdfData: Uint8Array) => {
+    console.log('Form saved successfully', filledPdfData);
+  };
+
 
   return (
-    <div ref={canvasContainerRef} className="flex-1 overflow-auto p-4 bg-gray-800 flex flex-col items-center">
-      {!pdfData && (
-        <div className="text-gray-400 text-center mt-20">
-          <p className="text-2xl">Please open a PDF file to begin.</p>
+    <div className="flex-1 flex flex-col bg-gray-800">
+      {hasInteractiveForms && pdfData && (
+        <div style={{ position: 'sticky', top: 0, zIndex: 1000, width: '100%' }}>
+          <FormToolbar 
+            pdfData={pdfData}
+            formFields={formFields}
+            hasFormFields={hasInteractiveForms}
+            onSave={handleFormSave}
+          />
         </div>
       )}
-      {error && (
-        <div className="text-red-400 p-4">
-          <p>{error}</p>
-        </div>
-      )}
-      {menuPosition && (
-        <PDFContextMenu
-          x={menuPosition.x}
-          y={menuPosition.y}
-          onClose={() => setMenuPosition(null)}
-          onCopy={handleCopy}
-          onApplyAnnotation={addAnnotation}
-          selectedHighlightColor={selectedHighlightColor}
-          onColorChange={setSelectedHighlightColor}
-        />
-      )}
+      <div ref={canvasContainerRef} className="flex-1 overflow-auto p-4 flex flex-col items-center relative">
+        {!pdfData && (
+          <div className="text-gray-400 text-center mt-20">
+            <p className="text-2xl">Please open a PDF file to begin.</p>
+          </div>
+        )}
+        {error && (
+          <div className="text-red-400 p-4">
+            <p>{error}</p>
+          </div>
+        )}
+        {menuPosition && (
+          <PDFContextMenu
+            x={menuPosition.x}
+            y={menuPosition.y}
+            onClose={() => setMenuPosition(null)}
+            onCopy={handleCopy}
+            onApplyAnnotation={addAnnotation}
+            selectedHighlightColor={selectedHighlightColor}
+            onColorChange={setSelectedHighlightColor}
+          />
+        )}
+      </div>
     </div>
   );
 };

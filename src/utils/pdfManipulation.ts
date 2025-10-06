@@ -1,5 +1,6 @@
 import { PDFDocument } from 'pdf-lib';
-import type { PDFPage } from '../types';
+import type { PDFPage, FormField } from '../types';
+import { saveFilledForm } from './formUtils';
 
 
 export async function createPDFFromPages(
@@ -168,4 +169,23 @@ export function validatePageArray(pages: PDFPage[]): { isValid: boolean; error?:
   }
   
   return { isValid: true };
+}
+
+
+export async function saveFilledFormPDF(
+  pdfData: Uint8Array,
+  formFields: FormField[]
+): Promise<Uint8Array> {
+  return saveFilledForm(pdfData, formFields);
+}
+
+
+export function downloadFilledFormPDF(
+  pdfData: Uint8Array,
+  formFields: FormField[],
+  filename: string = 'filled-form.pdf'
+): Promise<void> {
+  return saveFilledForm(pdfData, formFields).then(filledPdfData => {
+    downloadPDF(filledPdfData, filename);
+  });
 }

@@ -56,7 +56,7 @@ export interface InsertPageOptions {
   type: 'upload' | 'duplicate';
   sourcePageId?: string;
   insertAfterPageId?: string;
-  fileData?: Uint8Array; // for 'upload'
+  fileData?: Uint8Array; 
 }
 
 export interface ChatMessage {
@@ -84,5 +84,71 @@ export interface SemanticSearchResult {
 export interface SemanticSearchResponse {
   results: SemanticSearchResult[];
   summary: string;
+}
+
+
+export type FormFieldType = 'text' | 'checkbox' | 'radio' | 'select' | 'button' | 'signature';
+
+export interface FormFieldOption {
+  value: string;
+  displayValue: string;
+}
+
+export interface FormFieldBase {
+  id: string;
+  name: string;
+  type: FormFieldType;
+  page: number;
+  rect: Rect;
+  value: string | boolean | string[];
+  defaultValue?: string | boolean | string[];
+  required?: boolean;
+  readOnly?: boolean;
+}
+
+export interface TextFormField extends FormFieldBase {
+  type: 'text';
+  value: string;
+  multiline?: boolean;
+  maxLength?: number;
+  placeholder?: string;
+}
+
+export interface CheckboxFormField extends FormFieldBase {
+  type: 'checkbox';
+  value: boolean;
+  exportValue?: string;
+}
+
+export interface RadioFormField extends FormFieldBase {
+  type: 'radio';
+  value: string;
+  groupName: string;
+  exportValue: string;
+}
+
+export interface SelectFormField extends FormFieldBase {
+  type: 'select';
+  value: string | string[];
+  options: FormFieldOption[];
+  multiSelect?: boolean;
+}
+
+export interface ButtonFormField extends FormFieldBase {
+  type: 'button';
+  value: string;
+  buttonType: 'push' | 'submit' | 'reset';
+}
+
+export interface SignatureFormField extends FormFieldBase {
+  type: 'signature';
+  value: string;
+}
+
+export type FormField = TextFormField | CheckboxFormField | RadioFormField | SelectFormField | ButtonFormField | SignatureFormField;
+
+export interface FormData {
+  fields: FormField[];
+  modified: boolean;
 }
 
