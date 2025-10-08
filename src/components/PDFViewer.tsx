@@ -274,6 +274,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
           formLayerDiv.style.width = `${scaledViewport.width}px`;
           formLayerDiv.style.height = `${scaledViewport.height}px`;
           formLayerDiv.style.zIndex = '20';
+          formLayerDiv.style.pointerEvents = 'none';
 
           layersDiv.appendChild(canvasDiv);
           layersDiv.appendChild(textLayerDiv);
