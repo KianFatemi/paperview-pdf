@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import Toolbar from './components/Toolbar';
 import Sidebar from './components/Sidebar';
 import PDFViewer from './components/PDFViewer';
@@ -49,6 +49,60 @@ function App() {
     setIsAIPanelOpen(prev => !prev);
   }, []); 
 
+  // Handle menu open PDF event
+  const handleOpenFile = useCallback(async () => {
+    try {
+      const fileArray: Uint8Array | null = await window.electronAPI.openFile();
+      
+      if (fileArray) {
+        setPdfData(fileArray);
+        
+        try {
+          const loadingTask = pdfjsLib.getDocument(new Uint8Array(fileArray));
+          const pdfDoc = await loadingTask.promise;
+          setPdfDocument(pdfDoc);
+        } catch (error) {
+          console.error('Failed to load PDF document:', error);
+          setPdfDocument(null);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to open or read file:", error);
+    }
+  }, []);
+
+  // Handle menu export PDF event
+  const handleExportPdf = useCallback(async () => {
+    if (!pdfData) {
+      alert('No PDF loaded to export');
+      return;
+    }
+
+    try {
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      const filename = `document-${timestamp}.pdf`;
+      
+      const success = await window.electronAPI.saveFile(pdfData, filename);
+      if (success) {
+        console.log('PDF exported successfully');
+      }
+    } catch (error) {
+      console.error('Failed to export PDF:', error);
+      alert('Failed to export PDF: ' + (error as Error).message);
+    }
+  }, [pdfData]);
+
+  // Listen for menu events from Electron
+  useEffect(() => {
+    const removeOpenListener = window.electronAPI.onMenuOpenPdf(handleOpenFile);
+    const removeExportListener = window.electronAPI.onMenuExportPdf(handleExportPdf);
+
+    return () => {
+      removeOpenListener();
+      removeExportListener();
+    };
+  }, [handleOpenFile, handleExportPdf]);
+
   return (
     <div className="flex h-screen bg-gray-800 font-sans">
       <Sidebar 
@@ -58,8 +112,6 @@ function App() {
       />
       <main className={`flex-1 flex flex-col overflow-hidden relative min-h-0 transition-all duration-300 ${isAIPanelOpen ? 'mr-96' : ''}`}>
         <Toolbar 
-          setPdfData={setPdfData}
-          setPdfDocument={setPdfDocument}
           handleZoomIn={handleZoomIn}
           handleZoomOut={handleZoomOut}
           handleFitToScreen={handleFitToScreen}
