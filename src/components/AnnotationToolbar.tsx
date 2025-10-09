@@ -7,7 +7,7 @@ interface AnnotationToolbarProps {
   onColorChange: (color: HighlightColor) => void;
 }
 
-const HIGHLIGHT_COLORS: HighlightColor[] = [
+export const HIGHLIGHT_COLORS: HighlightColor[] = [
   { name: 'Yellow', value: 'rgba(255, 255, 0, 0.5)' },
   { name: 'Green', value: 'rgba(0, 255, 0, 0.5)' },
   { name: 'Blue', value: 'rgba(0, 123, 255, 0.5)' },

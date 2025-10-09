@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
@@ -24,19 +24,18 @@ interface PDFViewerProps {
   stickyNoteMode: boolean;
   onToggleStickyNoteMode: () => void;
   onPageChange?: (page: number) => void;
+  selectedHighlightColor: HighlightColor;
+  onColorChange: (color: HighlightColor) => void;
+  addAnnotationRef?: React.MutableRefObject<((type: AnnotationType) => void) | null>;
 }
 
-const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, searchQuery = '', stickyNoteMode, onToggleStickyNoteMode, onPageChange }) => {
+const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, searchQuery = '', stickyNoteMode, onToggleStickyNoteMode, onPageChange, selectedHighlightColor, onColorChange, addAnnotationRef }) => {
   const canvasContainerRef = useRef<HTMLDivElement>(null);
   const [pdfDocument, setPdfDocument] = useState<pdfjsLib.PDFDocumentProxy | null>(null);
   const [error, setError] = useState<string | null>(null);
   const queryRef = useRef<string>(searchQuery);
   const [annotations, setAnnotations] = useState<AnnotationInterface[]>([]); 
   const [pageScales, setPageScales] = useState<{ [key: number]: number }>({}); 
-  const [selectedHighlightColor, setSelectedHighlightColor] = useState<HighlightColor>({
-    name: 'Yellow',
-    value: 'rgba(255, 255, 0, 0.5)'
-  });
   const [stickyNotes, setStickyNotes] = useState<StickyNote[]>([]); 
   const renderRunIdRef = useRef(0);
   const [formFields, setFormFields] = useState<FormField[]>([]);
@@ -448,7 +447,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
   const { menuPosition, setMenuPosition, handleCopy } = useCopyText(canvasContainerRef);
 
   
-  const addAnnotation = (type: AnnotationType) => {
+  const addAnnotation = useCallback((type: AnnotationType) => {
     let color: string;
     if (type === 'highlight') {
       color = selectedHighlightColor.value;
@@ -505,8 +504,15 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
     };
 
     setAnnotations((prev) => [...prev, newAnnotation]);
-    selection.removeAllRanges(); 
-  };
+    selection.removeAllRanges();
+  }, [selectedHighlightColor, pageScales]);
+
+  // Expose addAnnotation function to parent via ref
+  useEffect(() => {
+    if (addAnnotationRef) {
+      addAnnotationRef.current = addAnnotation;
+    }
+  }, [addAnnotation, addAnnotationRef]);
 
   // Sticky note handlers
   const addStickyNote = (pageNum: number, x: number, y: number) => {
@@ -582,7 +588,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
             onCopy={handleCopy}
             onApplyAnnotation={addAnnotation}
             selectedHighlightColor={selectedHighlightColor}
-            onColorChange={setSelectedHighlightColor}
+            onColorChange={onColorChange}
           />
         )}
       </div>

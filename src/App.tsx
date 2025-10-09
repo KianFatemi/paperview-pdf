@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import Toolbar from './components/Toolbar';
 import Sidebar from './components/Sidebar';
 import PDFViewer from './components/PDFViewer';
@@ -6,7 +6,7 @@ import PDFSearchOverlay from './components/PDFSearchOverlay';
 import PageManager from './components/PageManager';
 import AISidePanel from './components/AISidePanel';
 import AIButton from './components/AIButton';
-import type { PDFPage, PageManagementState } from './types';
+import type { PDFPage, PageManagementState, HighlightColor, AnnotationType } from './types';
 import * as pdfjsLib from 'pdfjs-dist';
 
 function App() {
@@ -24,6 +24,11 @@ function App() {
     isPageManagerOpen: false,
   });
   const [isAIPanelOpen, setIsAIPanelOpen] = useState<boolean>(false);
+  const [selectedHighlightColor, setSelectedHighlightColor] = useState<HighlightColor>({
+    name: 'Yellow',
+    value: 'rgba(255, 255, 0, 0.5)'
+  });
+  const addAnnotationRef = useRef<((type: AnnotationType) => void) | null>(null);
 
   const handleZoomIn = useCallback(() => setZoomLevel((prevZoom) => prevZoom + 0.1), []);
   const handleZoomOut = useCallback(() => setZoomLevel((prevZoom) => Math.max(0.1, prevZoom - 0.1)), []);
@@ -47,7 +52,13 @@ function App() {
 
   const handleToggleAIPanel = useCallback(() => {
     setIsAIPanelOpen(prev => !prev);
-  }, []); 
+  }, []);
+
+  const handleApplyAnnotation = useCallback((type: AnnotationType) => {
+    if (addAnnotationRef.current) {
+      addAnnotationRef.current(type);
+    }
+  }, []);
 
   // Handle menu open PDF event
   const handleOpenFile = useCallback(async () => {
@@ -120,6 +131,9 @@ function App() {
           zoomLevel={zoomLevel}
           stickyNoteMode={stickyNoteMode}
           onToggleStickyNoteMode={() => setStickyNoteMode(!stickyNoteMode)}
+          selectedHighlightColor={selectedHighlightColor}
+          onColorChange={setSelectedHighlightColor}
+          onApplyAnnotation={handleApplyAnnotation}
         />
         <div className="relative flex-1 flex min-h-0">
           <PDFViewer 
@@ -130,6 +144,9 @@ function App() {
             stickyNoteMode={stickyNoteMode}
             onToggleStickyNoteMode={() => setStickyNoteMode(!stickyNoteMode)}
             onPageChange={setActivePage}
+            selectedHighlightColor={selectedHighlightColor}
+            onColorChange={setSelectedHighlightColor}
+            addAnnotationRef={addAnnotationRef}
           />
           {isSearchOpen && (
             <PDFSearchOverlay
