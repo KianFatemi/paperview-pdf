@@ -41,6 +41,8 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
   const [formFields, setFormFields] = useState<FormField[]>([]);
   const [hasInteractiveForms, setHasInteractiveForms] = useState(false);
   const formRootsRef = useRef<Map<number, Root>>(new Map());
+  const isScrollingRef = useRef(false);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     queryRef.current = searchQuery;
@@ -172,6 +174,9 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
       }
       formRootsRef.current.forEach(root => setTimeout(() => root.unmount(), 0));
       formRootsRef.current.clear();
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
       
       observers = [];
       highlightTimeouts = [];
@@ -369,7 +374,14 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
                   entry.target.getAttribute('data-page-number') || '0'
                 );
                 if (pageNumber > 0) {
+                  isScrollingRef.current = true; // Mark as natural scroll
                   onPageChange(pageNumber);
+                  if (scrollTimeoutRef.current) {
+                    clearTimeout(scrollTimeoutRef.current);
+                  }
+                  scrollTimeoutRef.current = setTimeout(() => {
+                    isScrollingRef.current = false;
+                  }, 100);
                 }
               }
             });
@@ -414,6 +426,11 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfData, activePage, zoomLevel, s
 
   useEffect(() => {
     if (!canvasContainerRef.current) return;
+    
+    // Only scroll programmatically if the page change wasn't from natural scrolling
+    if (isScrollingRef.current) {
+      return;
+    }
     
     const targetCanvas = canvasContainerRef.current.querySelector(
       `[data-page-number="${activePage}"]`
