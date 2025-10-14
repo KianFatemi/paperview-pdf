@@ -147,7 +147,7 @@ IMPORTANT: Return ONLY the JSON object, no additional text or markdown formattin
   }
 
   isConfigured(): boolean {
-    return API_KEY !== 'your-gemini-api-key-here' && API_KEY.length > 0;
+    return !!API_KEY && API_KEY.length > 0;
   }
 }
 

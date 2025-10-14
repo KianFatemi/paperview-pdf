@@ -76,9 +76,20 @@ function createMenu() {
 }
 
 function createWindow() {
+  let iconName: string;
+  if (process.platform === 'darwin') {
+    iconName = 'icon.icns';
+  } else if (process.platform === 'win32') {
+    iconName = 'icon.ico';
+  } else {
+    iconName = 'icon.png';
+  }
+  
   win = new BrowserWindow({
+    width: 1200,
+    height: 800,
     title: 'PaperView',
-    icon: path.join(process.env.VITE_PUBLIC ?? '', 'electron-vite.svg'),
+    icon: path.join(process.env.VITE_PUBLIC ?? '', iconName),
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'), 
     },
