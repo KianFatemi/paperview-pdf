@@ -104,7 +104,7 @@ const PageToolbar: React.FC<PageToolbarProps> = ({
           {hasSelection && (
             <button
               onClick={onClearSelection}
-              className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+              className="px-3 py-1.5 text-sm bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
             >
               Clear Selection
             </button>
