@@ -12,6 +12,8 @@ A cross platform PDF viewer built with Electron, React, and TypeScript. PaperVie
 - **Modern UI**: Clean, dark-themed interface built with Tailwind CSS
 - **Cross-Platform**: Works on Windows, macOS, and Linux
 
+![Screenshot](public/PaperViewScreenshot.jpg)
+
 ## Tech Stack
 
 - **Frontend**: React 19 + TypeScript
