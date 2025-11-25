@@ -1,4 +1,4 @@
-# PaperView 📄
+# PaperView
 
 A cross platform PDF viewer built with Electron, React, and TypeScript. PaperView provides a clean interface for viewing and searching through PDF documents.
 
@@ -66,34 +66,7 @@ A cross platform PDF viewer built with Electron, React, and TypeScript. PaperVie
    npm run electron:build
    ```
 
-## Project Structure
-
-```
-paperview/
-├── electron/              # Electron main process files
-│   ├── main.ts            # Main Electron process
-│   └── preload.ts         # Preload script
-├── src/
-│   ├── components/        # React components
-│   │   ├── PDFViewer.tsx      # Main PDF display component
-│   │   ├── PDFSearchOverlay.tsx # Search functionality
-│   │   ├── AISidePanel.tsx    # AI assistant panel
-│   │   ├── AIChatBox.tsx      # AI chat interface
-│   │   ├── AIButton.tsx       # AI toggle button
-│   │   ├── Sidebar.tsx        # Thumbnail navigation
-│   │   ├── Toolbar.tsx        # Top toolbar with controls
-│   │   └── ThumbnailView.tsx  # Page thumbnails
-│   ├── utils/             # Utility functions
-│   │   ├── geminiApi.ts       # Gemini AI integration
-│   │   └── pdfTextExtractor.ts # PDF text extraction
-│   ├── App.tsx            # Main application component
-│   ├── main.tsx           # React entry point
-│   └── types.ts           # TypeScript type definitions
-├── dist-electron/         # Built Electron files
-└── public/               # Static assets
-```
-
-## 🎮 Usage
+## Usage
 
 ### Opening PDFs
 - Click the "Open PDF" button in the toolbar
@@ -111,14 +84,3 @@ paperview/
 - **Navigation**: Use Previous/Next buttons to jump between search results
 - **Context Preview**: See surrounding text for each match
 - **Page Jump**: Click any search result to navigate directly to that page
-
-
-## Roadmap
-
-- [x] AI Assistant integration
-- [ ] Enhanced AI features (image analysis, table extraction)
-- [ ] Annotation support
-- [ ] Bookmarks functionality  
-- [ ] Print support
-- [ ] Recent files list
-- [ ] PDF edits
